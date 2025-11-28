@@ -1,0 +1,551 @@
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Autoplay, Pagination, EffectCoverflow } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-coverflow';
+
+const modules = [Autoplay, Pagination, EffectCoverflow];
+
+const images = [
+  { src: 'https://placehold.co/800x450/D42426/white?text=Foto+Familia+1', alt: 'Foto 1' },
+  { src: 'https://placehold.co/800x450/165B33/white?text=Foto+Familia+2', alt: 'Foto 2' },
+  { src: 'https://placehold.co/800x450/F8B229/white?text=Foto+Familia+3', alt: 'Foto 3' },
+  { src: 'https://placehold.co/800x450/2C3E50/white?text=Foto+Familia+4', alt: 'Foto 4' },
+  { src: 'https://placehold.co/800x450/D42426/white?text=Foto+Familia+5', alt: 'Foto 5' },
+];
+
+// Modal state
+const isModalOpen = ref(false);
+const currentImageIndex = ref(0);
+const modalImageRef = ref(null);
+
+// Zoom state
+const scale = ref(1);
+const translateX = ref(0);
+const translateY = ref(0);
+const isDragging = ref(false);
+const dragStart = ref({ x: 0, y: 0 });
+const lastTouchDistance = ref(0);
+
+// Open modal
+const openModal = (index) => {
+  currentImageIndex.value = index;
+  isModalOpen.value = true;
+  resetZoom();
+  // Prevent body scroll
+  document.body.style.overflow = 'hidden';
+};
+
+// Close modal
+const closeModal = () => {
+  isModalOpen.value = false;
+  resetZoom();
+  // Restore body scroll
+  document.body.style.overflow = '';
+};
+
+// Reset zoom
+const resetZoom = () => {
+  scale.value = 1;
+  translateX.value = 0;
+  translateY.value = 0;
+};
+
+// Double click zoom (desktop)
+const handleDoubleClick = (event) => {
+  if (scale.value === 1) {
+    scale.value = 2;
+    const rect = modalImageRef.value.getBoundingClientRect();
+    const x = event.clientX - rect.left - rect.width / 2;
+    const y = event.clientY - rect.top - rect.height / 2;
+    translateX.value = -x * (scale.value - 1);
+    translateY.value = -y * (scale.value - 1);
+  } else {
+    resetZoom();
+  }
+};
+
+// Touch handlers for pinch zoom (mobile)
+const handleTouchStart = (event) => {
+  if (event.touches.length === 2) {
+    event.preventDefault();
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+    lastTouchDistance.value = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+  } else if (event.touches.length === 1 && scale.value > 1) {
+    isDragging.value = true;
+    dragStart.value = {
+      x: event.touches[0].clientX - translateX.value,
+      y: event.touches[0].clientY - translateY.value
+    };
+  }
+};
+
+const handleTouchMove = (event) => {
+  if (event.touches.length === 2) {
+    event.preventDefault();
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+    const distance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+    
+    if (lastTouchDistance.value > 0) {
+      const scaleChange = distance / lastTouchDistance.value;
+      const newScale = Math.min(Math.max(scale.value * scaleChange, 1), 4);
+      scale.value = newScale;
+      
+      if (newScale > 1) {
+        const rect = modalImageRef.value.getBoundingClientRect();
+        const centerX = (touch1.clientX + touch2.clientX) / 2 - rect.left - rect.width / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2 - rect.top - rect.height / 2;
+        translateX.value = -centerX * (newScale - 1);
+        translateY.value = -centerY * (newScale - 1);
+      }
+    }
+    lastTouchDistance.value = distance;
+  } else if (isDragging.value && event.touches.length === 1) {
+    event.preventDefault();
+    translateX.value = event.touches[0].clientX - dragStart.value.x;
+    translateY.value = event.touches[0].clientY - dragStart.value.y;
+  }
+};
+
+const handleTouchEnd = () => {
+  lastTouchDistance.value = 0;
+  isDragging.value = false;
+  
+  // Reset if zoomed out too much
+  if (scale.value < 1) {
+    resetZoom();
+  }
+};
+
+// Mouse drag (desktop)
+const handleMouseDown = (event) => {
+  if (scale.value > 1) {
+    isDragging.value = true;
+    dragStart.value = {
+      x: event.clientX - translateX.value,
+      y: event.clientY - translateY.value
+    };
+  }
+};
+
+const handleMouseMove = (event) => {
+  if (isDragging.value && scale.value > 1) {
+    translateX.value = event.clientX - dragStart.value.x;
+    translateY.value = event.clientY - dragStart.value.y;
+  }
+};
+
+const handleMouseUp = () => {
+  isDragging.value = false;
+};
+
+// Navigation
+const nextImage = () => {
+  currentImageIndex.value = (currentImageIndex.value + 1) % images.length;
+  resetZoom();
+};
+
+const prevImage = () => {
+  currentImageIndex.value = (currentImageIndex.value - 1 + images.length) % images.length;
+  resetZoom();
+};
+
+// Keyboard navigation
+const handleKeyDown = (event) => {
+  if (!isModalOpen.value) return;
+  
+  if (event.key === 'Escape') {
+    closeModal();
+  } else if (event.key === 'ArrowRight') {
+    nextImage();
+  } else if (event.key === 'ArrowLeft') {
+    prevImage();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  document.body.style.overflow = '';
+});
+</script>
+
+<template>
+  <section class="gallery-section">
+    <h2 class="gallery-title">Nossos Momentos</h2>
+    <div class="carousel-container">
+      <swiper
+        :effect="'coverflow'"
+        :grabCursor="true"
+        :centeredSlides="true"
+        :slidesPerView="'auto'"
+        :loop="true"
+        :speed="9000"
+        :coverflowEffect="{
+          rotate: 15,
+          stretch: 0,
+          depth: 300,
+          modifier: 1,
+          slideShadows: true,
+        }"
+        :autoplay="{
+          delay: 0,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: false
+        }"
+        :modules="modules"
+        class="mySwiper"
+      >
+        <swiper-slide v-for="(img, index) in images" :key="index">
+          <img 
+            :src="img.src" 
+            :alt="img.alt" 
+            @click="openModal(index)"
+            class="carousel-image"
+          />
+        </swiper-slide>
+      </swiper>
+    </div>
+
+    <!-- Modal de Imagem em Tela Cheia -->
+    <Transition name="modal">
+      <div 
+        v-if="isModalOpen" 
+        class="image-modal"
+        @click.self="closeModal"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+        @mousedown="handleMouseDown"
+        @mousemove="handleMouseMove"
+        @mouseup="handleMouseUp"
+        @mouseleave="handleMouseUp"
+      >
+        <button class="modal-close" @click="closeModal" aria-label="Fechar">
+          ✕
+        </button>
+        
+        <button 
+          class="modal-nav modal-nav-prev" 
+          @click.stop="prevImage"
+          aria-label="Imagem anterior"
+        >
+          ‹
+        </button>
+        
+        <div class="modal-image-container">
+          <img
+            ref="modalImageRef"
+            :src="images[currentImageIndex].src"
+            :alt="images[currentImageIndex].alt"
+            class="modal-image"
+            :style="{
+              transform: `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`,
+              transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+            }"
+            @dblclick="handleDoubleClick"
+            @click.stop
+          />
+        </div>
+        
+        <button 
+          class="modal-nav modal-nav-next" 
+          @click.stop="nextImage"
+          aria-label="Próxima imagem"
+        >
+          ›
+        </button>
+        
+        <div class="modal-indicator">
+          {{ currentImageIndex + 1 }} / {{ images.length }}
+        </div>
+      </div>
+    </Transition>
+  </section>
+</template>
+
+<style scoped>
+.gallery-section {
+  padding: clamp(40px, 8vw, 60px) 0;
+  background: linear-gradient(to bottom, #e8f5e9 0%, var(--color-green, #165B33) 20%, var(--color-green, #165B33) 80%, #1a1a1a 100%);
+  color: white;
+  text-align: center;
+  overflow-x: hidden;
+  overflow-y: visible;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gallery-title {
+  font-family: var(--font-title, 'Great Vibes', cursive);
+  font-size: clamp(2.5rem, 2rem + 3vw, 4rem); /* Fluid font size */
+  margin-bottom: 30px;
+  color: var(--color-gold, #F8B229);
+  text-shadow: 0 0 30px rgba(248, 178, 41, 0.4);
+}
+
+.carousel-container {
+  width: 100%;
+  max-width: 100vw;
+  padding-top: 20px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.swiper {
+  width: 100%;
+  max-width: 100%;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+:deep(.swiper-wrapper) {
+  transition-timing-function: linear;
+}
+
+.swiper-slide {
+  background-position: center;
+  background-size: cover;
+  /* Mobile-first: relative width */
+  width: 70vw; 
+  height: 50vh;
+  max-height: 400px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  border: 3px solid var(--color-gold, #F8B229);
+}
+
+/* Desktop overrides */
+@media (min-width: 768px) {
+  .swiper-slide {
+    width: 400px;
+    height: 300px;
+    border: 4px solid var(--color-gold, #F8B229);
+  }
+}
+
+@media (min-width: 1024px) {
+  .swiper-slide {
+    width: 600px;
+    height: 400px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .swiper-slide {
+    width: 700px;
+    height: 450px;
+  }
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-box-reflect: below 1px linear-gradient(transparent, transparent, #0002, #0004);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.carousel-image:hover {
+  transform: scale(1.02);
+}
+
+/* Modal Styles */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.modal-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100vw;
+  max-height: 100vh;
+}
+
+.modal-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.modal-image:active {
+  cursor: grabbing;
+}
+
+.modal-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  transition: all 0.3s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.modal-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  transition: all 0.3s ease;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+}
+
+.modal-nav:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.modal-nav-prev {
+  left: 20px;
+}
+
+.modal-nav-next {
+  right: 20px;
+}
+
+.modal-indicator {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  z-index: 10001;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .modal-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .modal-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+
+  .modal-nav-prev {
+    left: 10px;
+  }
+
+  .modal-nav-next {
+    right: 10px;
+  }
+
+  .modal-indicator {
+    bottom: 20px;
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .image-modal {
+    padding: 10px;
+  }
+}
+
+/* Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-image-container,
+.modal-leave-active .modal-image-container {
+  transition: transform 0.3s ease;
+}
+
+.modal-enter-from .modal-image-container,
+.modal-leave-to .modal-image-container {
+  transform: scale(0.9);
+}
+</style>

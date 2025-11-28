@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natal da Família</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --color-red: #D42426;
+            --color-green: #165B33;
+            --color-gold: #F8B229;
+            --color-white: #F0F2F5;
+            --color-text: #2C3E50;
+            --font-title: 'Great Vibes', cursive;
+            --font-body: 'Lato', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--color-text);
+            background-color: var(--color-white);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Snow Effect Canvas */
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Christmas Lights Decoration */
+        .christmas-lights {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            z-index: 9998;
+            background-image: url('data:image/svg+xml;utf8,<svg width="40" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="5" fill="%23D42426" /><circle cx="30" cy="10" r="5" fill="%23165B33" /></svg>');
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.5;
+                filter: brightness(1);
+            }
+
+            100% {
+                opacity: 1;
+                filter: brightness(1.5);
+            }
+        }
+
+        /* Hero Section */
+        header {
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            position: relative;
+            /* Smooth transition to next section using gradient mask */
+            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+        }
+
+        h1 {
+            font-family: var(--font-title);
+            font-size: 5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: fadeInDown 1.5s ease-out;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 1px 1px 2px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1.5s ease-out 0.5s backwards;
+        }
+
+        /* Message Section */
+        .message-section {
+            padding: 100px 20px;
+            background: linear-gradient(to bottom, #fff5f5 0%, #ffffff 50%, #e8f5e9 100%);
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-top: -50px;
+            /* Overlap with header fade */
+            z-index: 10;
+        }
+
+        .message-card {
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 60px 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(248, 178, 41, 0.3);
+            /* Glow Effect */
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.2), 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.8s ease-out;
+            backdrop-filter: blur(5px);
+        }
+
+        .message-card.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .message-card::before {
+            content: "★";
+            font-size: 2rem;
+            color: var(--color-gold);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 0 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(248, 178, 41, 0.5);
+        }
+
+        .message-title {
+            font-family: var(--font-title);
+            font-size: 3rem;
+            color: var(--color-red);
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-text {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        /* Gallery Section */
+        .gallery-section {
+            padding: 100px 0;
+            /* Remove side padding for full width marquee */
+            background: linear-gradient(to bottom, #e8f5e9 0%, var(--color-green) 20%, var(--color-green) 80%, #1a1a1a 100%);
+            color: white;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+            /* Smooth transition from previous section */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+
+        .gallery-title {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            margin-bottom: 50px;
+            color: var(--color-gold);
+            text-shadow: 0 0 30px rgba(248, 178, 41, 0.4);
+        }
+
+        /* Marquee Carousel Styles */
+        .marquee-container {
+            width: 100%;
+            z-index: 10;
+            position: relative;
+        }
+
+        .marquee-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+
+            /* Move half way because content is duplicated */
+        }
+
+        /* Audio Player */
+        .audio-control {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: var(--color-red);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(212, 36, 38, 0.6);
+            /* Glow */
+            transition: transform 0.3s ease, background 0.3s;
+            border: 2px solid var(--color-gold);
+        }
+
+        .audio-control:hover {
+            transform: scale(1.1);
+            background: #b91d1f;
+            box-shadow: 0 0 50px rgba(212, 36, 38, 0.9);
+        }
+
+        .audio-icon {
+            font-size: 24px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1a1a1a;
+            color: #888;
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 0.9rem;
+            border-top: 1px solid #333;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .message-card {
+                padding: 40px 20px;
+            }
+
+            .message-title {
+                font-size: 2.5rem;
+            }
+
+            .marquee-item {
+                width: 280px;
+                height: 180px;
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="christmas-lights"></div>
+    <canvas id="snow-canvas"></canvas>
+
+    <header>
+        <h1 contenteditable="true">Natal da Família [Sobrenome]</h1>
+        <p class="subtitle">Celebrando o amor, a união e a alegria.</p>
+    </header>
+
+    <section class="message-section" id="mensagem">
+        <div class="message-card">
+            <h2 class="message-title">O Nosso Maior Tesouro</h2>
+            <p class="message-text">
+                Neste Natal, celebramos o presente mais valioso de todos: a nossa família. Mais do que as luzes ou a
+                ceia, o que realmente brilha é a alegria de estarmos juntos.
+            </p>
+            <p class="message-text">
+                Que esta noite renove as nossas esperanças e que o Ano Novo abra portas para uma prosperidade sem
+                limites. Que nunca nos falte o pão na mesa, o amor no coração e a sabedoria para transformarmos nossos
+                sonhos em realidade.
+            </p>
+            <p class="message-text">
+                Juntos, somos a força que constrói um futuro brilhante.
+            </p>
+        </div>
+    </section>
+
+    <section class="gallery-section">
+        <h2 class="gallery-title">Nossos Momentos</h2>
+        <div class="marquee-container">
+            <div class="marquee-content" id="marquee-content">
+                <!-- Images will be duplicated by JS for infinite scroll -->
+                <div class="marquee-item"><img src="https://placehold.co/800x450/D42426/white?text=Foto+Familia+1"
+                        alt="Foto 1"></div>
+                <div class="marquee-item"><img src="https://placehold.co/800x450/165B33/white?text=Foto+Familia+2"
+                        alt="Foto 2"></div>
+                <div class="marquee-item"><img src="https://placehold.co/800x450/F8B229/white?text=Foto+Familia+3"
+                        alt="Foto 3"></div>
+                <div class="marquee-item"><img src="https://placehold.co/800x450/2C3E50/white?text=Foto+Familia+4"
+                        alt="Foto 4"></div>
+                <div class="marquee-item"><img src="https://placehold.co/800x450/D42426/white?text=Foto+Familia+5"
+                        alt="Foto 5"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Feito com amor para o nosso Natal de 2024</p>
+    </footer>
+
+    <div class="audio-control" id="audio-btn" title="Tocar Música">
+        <span class="audio-icon">▶</span>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="https://actions.google.com/sounds/v1/holidays/jingle_bells_orchestra.ogg" type="audio/ogg">
+        Seu navegador não suporta áudio.
+    </audio>
+
+    <script>
+        // --- Snow Effect ---
+        const canvas = document.getElementById('snow-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let snowflakes = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = Math.random() * 1 - 0.5;
+                this.vy = Math.random() * 1 + 1;
+                this.radius = Math.random() * 2 + 1;
+                this.alpha = Math.random() * 0.5 + 0.3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.y > height) {
+                    this.y = -10;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initSnow() {
+            resize();
+            for (let i = 0; i < 100; i++) {
+                snowflakes.push(new Snowflake());
+            }
+            animateSnow();
+        }
+
+        function animateSnow() {
+            ctx.clearRect(0, 0, width, height);
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+            requestAnimationFrame(animateSnow);
+        }
+
+        window.addEventListener('resize', resize);
+        initSnow();
+
+        // --- Intersection Observer ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.message-card').forEach(el => observer.observe(el));
+
+        // --- Marquee Logic (Duplication) ---
+        const marqueeContent = document.getElementById('marquee-content');
+        // Clone content to ensure seamless loop
+        marqueeContent.innerHTML += marqueeContent.innerHTML;
+
+        // --- Audio Player ---
+        const audioBtn = document.getElementById('audio-btn');
+        const audio = document.getElementById('bg-music');
+        const audioIcon = audioBtn.querySelector('.audio-icon');
+        let isPlaying = false;
+
+        audioBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audio.pause();
+                audioIcon.textContent = '▶';
+            } else { 
+                audio.play().catch(e => console.log("Audio play failed:", e));
+                audioIcon.textContent = '❚❚';
+            }
+            isPlaying = !isPlaying;
+        });
+    </script>
+</body>
+
+</html>

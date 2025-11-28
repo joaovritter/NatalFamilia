@@ -1,0 +1,38 @@
+:root {
+  --color-red: #D42426;
+  --color-green: #165B33;
+  --color-gold: #F8B229;
+  --color-white: #F0F2F5;
+  --color-text: #2C3E50;
+  --font-title: 'Great Vibes', cursive;
+  --font-body: 'Lato', sans-serif;
+
+  /* Fluid Typography: Scale between 16px (mobile) and 18px (desktop) */
+  --font-size-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  /* Remove tap highlight on mobile */
+}
+
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-white);
+  overflow-x: hidden;
+  line-height: 1.6;
+  font-size: var(--font-size-base);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
