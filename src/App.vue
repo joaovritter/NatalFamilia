@@ -2,14 +2,12 @@
 import { ref } from 'vue';
 
 /* --- Componentes --- */
-import ChristmasLights from './components/ChristmasLights.vue';
 import SnowEffect from './components/SnowEffect.vue';
 import GoldDustEffect from './components/GoldDustEffect.vue';
 import AudioPlayer from './components/AudioPlayer.vue';
 import GiftOverlay from './components/GiftOverlay.vue'; // NOVO
 
 import HeroSection from './components/HeroSection.vue';
-import CountdownSection from './components/CountdownSection.vue';
 import ImageCarousel from './components/ImageCarousel.vue';
 import MessageSection from './components/MessageSection.vue';
 import WishesTreeSection from './components/WishesTreeSection.vue';
@@ -36,7 +34,6 @@ const handleGiftOpen = () => {
   <div class="app-wrapper">
     <GiftOverlay @open="handleGiftOpen" />
 
-    <ChristmasLights />
     <SnowEffect />
     <GoldDustEffect />
     
@@ -44,7 +41,6 @@ const handleGiftOpen = () => {
 
     <main>
       <HeroSection familyName="Reis" />
-      <CountdownSection />
       <ImageCarousel />
       <MessageSection />
       <!-- 
