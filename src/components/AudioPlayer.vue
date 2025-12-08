@@ -4,6 +4,17 @@ import { ref } from 'vue';
 const isPlaying = ref(false);
 const audioRef = ref(null);
 
+// Função pública para iniciar o áudio
+const playAudio = () => {
+  if (audioRef.value) {
+    audioRef.value.play()
+      .then(() => {
+        isPlaying.value = true;
+      })
+      .catch(e => console.log("Auto-play prevented (waiting for interaction):", e));
+  }
+};
+
 const toggleAudio = () => {
   if (!audioRef.value) return;
 
@@ -14,6 +25,11 @@ const toggleAudio = () => {
   }
   isPlaying.value = !isPlaying.value;
 };
+
+// Expondo a função para o componente Pai (App.vue) usar
+defineExpose({
+  playAudio
+});
 </script>
 
 <template>
@@ -23,18 +39,17 @@ const toggleAudio = () => {
     </div>
     <audio ref="audioRef" loop>
       <source src="https://actions.google.com/sounds/v1/holidays/jingle_bells_orchestra.ogg" type="audio/ogg">
-      Seu navegador não suporta áudio.
     </audio>
   </div>
 </template>
 
 <style scoped>
+/* Mantenha o CSS que você já tem */
 .audio-control {
   position: fixed;
   bottom: clamp(15px, 4vw, 20px);
   right: clamp(15px, 4vw, 20px);
   z-index: 1000;
-  /* Safe area for iPhone X+ */
   margin-bottom: env(safe-area-inset-bottom);
   margin-right: env(safe-area-inset-right);
   background: var(--color-red, #D42426);
@@ -49,22 +64,8 @@ const toggleAudio = () => {
   box-shadow: 0 0 30px rgba(212, 36, 38, 0.6);
   transition: transform 0.3s ease, background 0.3s;
   border: 2px solid var(--color-gold, #F8B229);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
-
-.audio-control:hover {
-  transform: scale(1.1);
-  background: #b91d1f;
-  box-shadow: 0 0 50px rgba(212, 36, 38, 0.9);
-}
-
-.audio-control:active {
-  transform: scale(0.95);
-}
-
-.audio-icon {
-  font-size: clamp(20px, 5vw, 24px);
-  user-select: none;
-}
+.audio-control:hover { transform: scale(1.1); }
+.audio-control:active { transform: scale(0.95); }
+.audio-icon { font-size: clamp(20px, 5vw, 24px); user-select: none; }
 </style>

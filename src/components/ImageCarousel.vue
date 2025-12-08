@@ -193,7 +193,7 @@ onUnmounted(() => {
         :centeredSlides="true"
         :slidesPerView="'auto'"
         :loop="true"
-        :speed="9000"
+        :speed="10000"
         :coverflowEffect="{
           rotate: 15,
           stretch: 0,
