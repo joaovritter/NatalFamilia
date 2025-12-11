@@ -1,23 +1,21 @@
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router';
+
+const props = defineProps({
   familyName: {
     type: String,
     default: '[Sobrenome]'
+  },
+  showCreateButton: {
+    type: Boolean,
+    default: true
   }
 });
 
+const router = useRouter();
+
 const handleCreateNatal = () => {
-  // Rolar suavemente para a próxima seção após o header
-  const header = document.querySelector('header');
-  if (header) {
-    const nextSection = header.nextElementSibling;
-    if (nextSection) {
-      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      // Se não encontrar próxima seção, rola um pouco para baixo
-      window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-    }
-  }
+  router.push('/configurar');
 };
 </script>
 
@@ -25,7 +23,7 @@ const handleCreateNatal = () => {
   <header>
     <h1>Natal da Família {{ familyName }}</h1>
     <p class="subtitle">Celebrando o amor, a união e a alegria.</p>
-    <button class="create-button" @click="handleCreateNatal">
+    <button v-if="showCreateButton" class="create-button" @click="handleCreateNatal">
       <span class="button-text">✨ Criar meu Natal Mágico</span>
       <span class="button-shine"></span>
     </button>

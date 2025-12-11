@@ -1,20 +1,37 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Autoplay, Pagination, EffectCoverflow } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-coverflow';
 
+const props = defineProps({
+  customImages: {
+    type: Array,
+    default: () => []
+  }
+});
+
 const modules = [Autoplay, Pagination, EffectCoverflow];
 
-const images = [
+const defaultImages = [
   { src: 'https://placehold.co/800x450/D42426/white?text=Foto+Familia+1', alt: 'Foto 1' },
   { src: 'https://placehold.co/800x450/165B33/white?text=Foto+Familia+2', alt: 'Foto 2' },
   { src: 'https://placehold.co/800x450/F8B229/white?text=Foto+Familia+3', alt: 'Foto 3' },
   { src: 'https://placehold.co/800x450/2C3E50/white?text=Foto+Familia+4', alt: 'Foto 4' },
   { src: 'https://placehold.co/800x450/D42426/white?text=Foto+Familia+5', alt: 'Foto 5' },
 ];
+
+const images = computed(() => {
+  if (props.customImages && props.customImages.length > 0) {
+    return props.customImages.map((src, index) => ({
+      src,
+      alt: `Foto Família ${index + 1}`
+    }));
+  }
+  return defaultImages;
+});
 
 // Modal state
 const isModalOpen = ref(false);

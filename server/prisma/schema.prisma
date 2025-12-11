@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ChristmasSite {
+  id               String   @id @db.VarChar(21) // NanoID generated in application
+  familyName       String   @db.VarChar(100)
+  message          String   @db.VarChar(2000)
+  photoUrl         String
+  paymentStatus    String   @default("PENDING")
+  price            Float
+  mp_preference_id String
+  mp_payment_id    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([paymentStatus])
+  @@index([mp_preference_id])
+  @@index([createdAt(sort: Desc)])
+  @@map("christmas_sites")
+}
+
+// Legacy tables migrated to Postgres
+model Payment {
+  id             Int      @id @default(autoincrement())
+  mp_payment_id  String?  @unique
+  status         String?
+  qr_code        String?
+  qr_code_base64 String?
+  created_at     DateTime @default(now())
+  families       Family[]
+
+  @@map("payments")
+}
+
+model Family {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  payment_id Int?
+  payment    Payment? @relation(fields: [payment_id], references: [id])
+  photos     String   // JSON string
+  created_at DateTime @default(now())
+
+  @@map("families")
+}

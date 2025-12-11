@@ -1,66 +1,37 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, provide } from 'vue';
+import { RouterView } from 'vue-router';
 
-/* --- Componentes --- */
+/* --- Componentes Globais --- */
+import ChristmasLights from './components/ChristmasLights.vue';
 import SnowEffect from './components/SnowEffect.vue';
 import GoldDustEffect from './components/GoldDustEffect.vue';
 import AudioPlayer from './components/AudioPlayer.vue';
-import GiftOverlay from './components/GiftOverlay.vue'; // NOVO
-
-import HeroSection from './components/HeroSection.vue';
-import ImageCarousel from './components/ImageCarousel.vue';
-import MessageSection from './components/MessageSection.vue';
-import WishesTreeSection from './components/WishesTreeSection.vue';
-import GuestbookSection from './components/GuestbookSection.vue';
-import FooterSection from './components/FooterSection.vue';
 
 import './assets/base.css';
 
 // Referência para controlar o AudioPlayer
 const audioPlayerRef = ref(null);
 
-// Quando o usuário abrir o presente:
-const handleGiftOpen = () => {
-  // Atrasar levemente o áudio para sincronizar com a animação de saída da caixa
-  setTimeout(() => {
-    if (audioPlayerRef.value) {
-      audioPlayerRef.value.playAudio();
-    }
-  }, 500);
+const playAudio = () => {
+  if (audioPlayerRef.value) {
+    audioPlayerRef.value.playAudio();
+  }
 };
+
+// Provide para que os filhos possam controlar o áudio
+provide('playGlobalAudio', playAudio);
 </script>
 
 <template>
   <div class="app-wrapper">
-    <GiftOverlay @open="handleGiftOpen" />
-
+    <ChristmasLights />
     <SnowEffect />
     <GoldDustEffect />
     
     <AudioPlayer ref="audioPlayerRef" />
 
-    <main>
-      <HeroSection familyName="Reis" />
-      <ImageCarousel />
-      <MessageSection />
-      <!-- 
-        Para adicionar uma imagem de fundo na árvore de desejos, 
-        passe a prop backgroundImage com a URL da imagem:
-        
-        Exemplo 1 - Imagem local (coloque a imagem na pasta public/):
-        <WishesTreeSection background-image="/tree-background.jpg" />
-        
-        Exemplo 2 - Imagem de URL externa:
-        <WishesTreeSection background-image="https://exemplo.com/imagem.jpg" />
-        
-        Exemplo 3 - Sem imagem (usa o fundo padrão):
-        <WishesTreeSection />
-      -->
-      <WishesTreeSection background-image="/tree.png" />
-      <GuestbookSection />
-    </main>
-
-    <FooterSection />
+    <RouterView />
   </div>
 </template>
 
@@ -80,11 +51,5 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-main {
-  flex: 1;
-  position: relative;
-  z-index: 10;
 }
 </style>
