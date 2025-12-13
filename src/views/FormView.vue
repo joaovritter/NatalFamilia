@@ -6,6 +6,7 @@ import api from '../services/api';
 const router = useRouter();
 const route = useRoute();
 const familyName = ref('');
+const familyMessage = ref('');
 const loading = ref(false);
 const files = ref([]);
 const step = ref(1); // 1: Info, 2: Payment, 3: Pix Waiting
@@ -13,6 +14,37 @@ const step = ref(1); // 1: Info, 2: Payment, 3: Pix Waiting
 let brickBuilder = null; // Variável local não reativa
 
 const mpPublicKey = import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-00000000-0000-0000-0000-000000000000';
+
+// Default wishes to start with
+const defaultWishes = [
+  { id: 1, icon: '🌟', title: 'Esperança', text: 'Que a fé guie cada passo do seu novo ano.' },
+  { id: 2, icon: '✈️', title: 'Viagens', text: 'Novos destinos e horizontes para explorar.' },
+  { id: 3, icon: '❤️', title: 'Amor', text: 'Laços mais fortes e corações aquecidos.' },
+  { id: 4, icon: '💰', title: 'Prosperidade', text: 'Sucesso financeiro e abundância em 2026.' },
+  { id: 5, icon: '🕊️', title: 'Paz', text: 'Serenidade para enfrentar qualquer desafio.' },
+  { id: 6, icon: '💪', title: 'Saúde', text: 'Energia vital para viver o melhor da vida.' },
+  { id: 7, icon: '🏠', title: 'Lar', text: 'Que nossa casa seja sempre um refúgio de alegria.' },
+  { id: 8, icon: '🚀', title: 'Conquistas', text: 'Projetos saindo do papel e sonhos realizados.' },
+  { id: 9, icon: '🎉', title: 'Alegria', text: 'Muitos motivos para sorrir todos os dias.' },
+  { id: 10, icon: '✨', title: 'Sabedoria', text: 'Clareza para as melhores escolhas.' },
+];
+const wishes = ref(JSON.parse(JSON.stringify(defaultWishes)));
+const wishFilesMap = ref({});
+
+const handleWishImageChange = (event, wishId) => {
+  const file = event.target.files[0];
+  if (file) {
+    // 1. Store file for upload
+    wishFilesMap.value[wishId] = file;
+    
+    // 2. Generate preview
+    const wishIndex = wishes.value.findIndex(w => w.id === wishId);
+    if (wishIndex !== -1) {
+       wishes.value[wishIndex].previewUrl = URL.createObjectURL(file);
+       wishes.value[wishIndex].hasNewImage = true;
+    }
+  }
+};
 
 const handleFileChange = (event) => {
   files.value = Array.from(event.target.files);
@@ -85,8 +117,11 @@ const initBrick = async () => {
                  await saveFamilyAndRedirect(responseData.id, familyName.value);
              } else if (responseData.status === 'pending') {
                  // Pagamento Pendente (Pix?): Checar se tem QR Code
-                 if (responseData.point_of_interaction && responseData.point_of_interaction.transaction_data) {
+                 // CORREÇÃO: O backend envia 'qr_code' e 'qr_code_base64' na raiz do objeto
+                 if (responseData.qr_code && responseData.qr_code_base64) {
                     handlePixPayment(responseData);
+                 } else if (responseData.point_of_interaction && responseData.point_of_interaction.transaction_data) {
+                    handlePixPayment(responseData); // Fallback para structure original do MP se mudar
                  } else {
                     console.warn('Pagamento pendente sem QR Code:', responseData);
                     alert('Pagamento iniciado com status: ' + responseData.status + '. Verifique seu email.');
@@ -146,9 +181,28 @@ const goToPayment = async () => {
 const saveFamilyAndRedirect = async (paymentId, name) => {
     const formData = new FormData();
     formData.append('name', name);
+    formData.append('message', familyMessage.value);
     formData.append('paymentId', paymentId);
+    
+    // Prepare wishes metadata (stripped of previews) to send as JSON
+    // The backend uses 'hasNewImage' flag to pick files from the array
+    const wishesPayload = wishes.value.map(w => ({
+        id: w.id,
+        title: w.title,
+        text: w.text,
+        hasNewImage: !!w.hasNewImage
+    }));
+    formData.append('wishes', JSON.stringify(wishesPayload));
+
     files.value.forEach(file => {
         formData.append('photos', file);
+    });
+
+    // Append wish images. ORDER MATTERS: Must match the order of 'hasNewImage' === true in the JSON
+    wishes.value.forEach(w => {
+        if (w.hasNewImage && wishFilesMap.value[w.id]) {
+            formData.append('wish_images', wishFilesMap.value[w.id]);
+        }
     });
 
     await api.post('/family', formData, {
@@ -163,13 +217,17 @@ const pixData = ref(null);
 
 const handlePixPayment = (data) => {
     console.log('Dados do Pix:', data);
-    const poi = data.point_of_interaction?.transaction_data;
     
-    if (poi) {
+    // Tentar pegar do formato flat (nosso backend) ou aninhado (MP direto)
+    const qrCode = data.qr_code || data.point_of_interaction?.transaction_data?.qr_code;
+    const qrCodeBase64 = data.qr_code_base64 || data.point_of_interaction?.transaction_data?.qr_code_base64;
+    const ticketUrl = data.ticket_url || data.point_of_interaction?.transaction_data?.ticket_url;
+
+    if (qrCode && qrCodeBase64) {
         pixData.value = {
-            qrCode: poi.qr_code,
-            qrCodeBase64: poi.qr_code_base64,
-            ticketUrl: poi.ticket_url,
+            qrCode: qrCode,
+            qrCodeBase64: qrCodeBase64,
+            ticketUrl: ticketUrl,
             paymentId: data.id
         };
         step.value = 3; // Step 3: Mostra o Pix
@@ -217,6 +275,61 @@ const checkPixStatus = async () => {
             required
             class="minimal-input"
           >
+        </div>
+
+        <!-- Wishes Editing Section -->
+        <div class="form-group">
+          <label>Desejos da Árvore (Bolinhas)</label>
+          <div class="wishes-grid">
+            <div v-for="(wish, index) in wishes" :key="wish.id" class="wish-item">
+               <div class="wish-header">
+                 <span>Bolinha {{ index + 1 }}</span>
+               </div>
+               
+               <!-- Image Upload for Wish -->
+               <div class="wish-upload-container">
+                    <label :for="'wish-file-'+wish.id" class="wish-upload-label">
+                        <img v-if="wish.previewUrl" :src="wish.previewUrl" class="wish-preview" />
+                        <div v-else class="wish-placeholder">
+                            <span>📷 Foto</span>
+                        </div>
+                    </label>
+                    <input 
+                        :id="'wish-file-'+wish.id"
+                        type="file" 
+                        accept="image/*" 
+                        @change="(e) => handleWishImageChange(e, wish.id)"
+                        class="hidden-input"
+                    />
+               </div>
+
+               <input 
+                 v-model="wish.title" 
+                 placeholder="Título (Ex: Amor)" 
+                 class="minimal-input small-input" 
+                 maxlength="20"
+               />
+               <textarea 
+                 v-model="wish.text" 
+                 placeholder="Mensagem do desejo..." 
+                 class="minimal-input small-input" 
+                 rows="2"
+                 maxlength="100"
+               ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="familyMessage">Mensagem Especial (Opcional)</label>
+          <textarea 
+            id="familyMessage"
+            v-model="familyMessage" 
+            placeholder="Escreva uma mensagem carinhosa para o 'Nosso Maior Tesouro'..."
+            rows="4"
+            class="minimal-input"
+            style="resize: vertical; min-height: 100px;"
+          ></textarea>
         </div>
 
         <div class="form-group">
@@ -380,6 +493,77 @@ small {
   font-size: 0.75rem;
 }
 
+.wishes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 10px;
+}
+
+.wish-item {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.wish-header {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.small-input {
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  resize: none;
+}
+
+.wish-upload-container {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.wish-upload-label {
+    cursor: pointer;
+    display: block;
+}
+
+.hidden-input {
+    display: none;
+}
+
+.wish-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border: 2px dashed #ccc;
+    color: #888;
+}
+
+.wish-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #1a1a1a;
+}
+
+@media (min-width: 600px) {
+  .wishes-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .minimal-btn {
   background: #1a1a1a;
   color: white;
@@ -420,5 +604,57 @@ small {
     margin-top: 20px;
     display: block;
     width: 100%;
+}
+
+.qr-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.qr-container img {
+    max-width: 100%;
+    max-height: 250px;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background: white;
+}
+
+.copy-paste-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.copy-paste-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.copy-paste-container textarea {
+    width: 100%;
+    padding: 10px;
+    background: #eee;
+    border: none;
+    border-radius: 4px;
+    resize: none;
+    font-size: 0.8rem;
+    font-family: monospace;
+}
+
+.ticket-link {
+    display: block;
+    text-align: center;
+    color: #009ee3;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.success-btn {
+    background-color: #009ee3; /* Mercado Pago Blue */
+}
+
+.success-btn:hover {
+    background-color: #007eb5;
 }
 </style>

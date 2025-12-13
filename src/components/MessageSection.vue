@@ -1,6 +1,16 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 
+const props = defineProps({
+  text: {
+    type: String,
+    default: null
+  },
+  title: {
+    type: String,
+    default: 'O Nosso Maior Tesouro'
+  }
+});
 const messageCard = ref(null);
 
 onMounted(() => {
@@ -21,19 +31,25 @@ onMounted(() => {
 <template>
   <section class="message-section" id="mensagem">
     <div class="message-card" ref="messageCard">
-      <h2 class="message-title">O Nosso Maior Tesouro</h2>
-      <p class="message-text">
-        Neste Natal, celebramos o presente mais valioso de todos: a nossa família. Mais do que as luzes ou a
-        ceia, o que realmente brilha é a alegria de estarmos juntos.
-      </p>
-      <p class="message-text">
-        Que esta noite renove as nossas esperanças e que o Ano Novo abra portas para uma prosperidade sem
-        limites. Que nunca nos falte o pão na mesa, o amor no coração e a sabedoria para transformarmos nossos
-        sonhos em realidade.
-      </p>
-      <p class="message-text">
-        Juntos, somos a força que constrói um futuro brilhante.
-      </p>
+      <h2 class="message-title">{{ title }}</h2>
+      
+      <div v-if="text">
+        <p class="message-text" style="white-space: pre-line;">{{ text }}</p>
+      </div>
+      <div v-else>
+        <p class="message-text">
+          Neste Natal, celebramos o presente mais valioso de todos: a nossa família. Mais do que as luzes ou a
+          ceia, o que realmente brilha é a alegria de estarmos juntos.
+        </p>
+        <p class="message-text">
+          Que esta noite renove as nossas esperanças e que o Ano Novo abra portas para uma prosperidade sem
+          limites. Que nunca nos falte o pão na mesa, o amor no coração e a sabedoria para transformarmos nossos
+          sonhos em realidade.
+        </p>
+        <p class="message-text">
+          Juntos, somos a força que constrói um futuro brilhante.
+        </p>
+      </div>
     </div>
   </section>
 </template>

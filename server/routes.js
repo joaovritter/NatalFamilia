@@ -66,7 +66,7 @@ router.post('/payment', async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Erro ao processar pagamento' });
+    res.status(500).json({ error: 'Erro ao processar pagamento', details: error.message, cause: error.cause });
   }
 });
 
@@ -109,9 +109,17 @@ router.get('/payment/:id', async (req, res) => {
 // --- Família ---
 
 // Criar/Salvar Família (Protegido por Payment ID)
-router.post('/family', upload.array('photos', 10), async (req, res) => {
+const uploadFields = upload.fields([
+  { name: 'photos', maxCount: 10 },
+  { name: 'wish_images', maxCount: 10 }
+]);
+
+router.post('/family', uploadFields, async (req, res) => {
   const { name, paymentId } = req.body;
-  const files = req.files;
+
+  // Acessar arquivos corretamente com .fields()
+  const photosFiles = req.files['photos'] || [];
+  const wishFiles = req.files['wish_images'] || [];
 
   if (!name || !paymentId) {
     return res.status(400).json({ error: 'Nome e ID do pagamento são obrigatórios' });
@@ -126,19 +134,42 @@ router.post('/family', upload.array('photos', 10), async (req, res) => {
     if (!payment) return res.status(400).json({ error: 'Pagamento inválido' });
 
     if (payment.status !== 'approved') {
-      // Para testes, vamos permitir 'pending' também se não estivermos usando webhook real
-      // return res.status(403).json({ error: 'Pagamento não aprovado' });
+      // Permissivo para testes
     }
 
-    const photoPaths = files.map(f => `/uploads/${f.filename}`);
+    // Processar fotos da galeria
+    const photoPaths = photosFiles.map(f => `/uploads/${f.filename}`);
     const photosJson = JSON.stringify(photoPaths);
+
+    // Processar imagens dos desejos
+    // Lógica: O frontend envia wishes como JSON. Se um wish tem imagem, ela está na array wishFiles.
+    // O frontend deve garantir a ordem ou enviar metadados. Vamos assumir ordem sequencial dos que tem imagem.
+    let wishesData = [];
+    if (req.body.wishes) {
+      try {
+        wishesData = JSON.parse(req.body.wishes);
+        let fileIndex = 0;
+        wishesData = wishesData.map(wish => {
+          if (wish.hasNewImage && fileIndex < wishFiles.length) {
+            const foundFile = wishFiles[fileIndex];
+            fileIndex++;
+            return { ...wish, image: `/uploads/${foundFile.filename}`, icon: null }; // Remove icon if image exists
+          }
+          return wish;
+        });
+      } catch (e) {
+        console.error('Erro ao processar wishes JSON', e);
+      }
+    }
 
     try {
       const newFamily = await prisma.family.create({
         data: {
           name: name,
           payment_id: parseInt(paymentId),
-          photos: photosJson
+          photos: photosJson,
+          message: req.body.message || null,
+          wishes: JSON.stringify(wishesData)
         }
       });
       res.json({ success: true, familyId: newFamily.id });
@@ -167,7 +198,9 @@ router.get('/family/:name', async (req, res) => {
 
     res.json({
       name: family.name,
-      photos: JSON.parse(family.photos)
+      photos: JSON.parse(family.photos),
+      message: family.message,
+      wishes: family.wishes ? JSON.parse(family.wishes) : []
     });
   } catch (error) {
     console.error(error);

@@ -16,11 +16,10 @@ const props = defineProps({
 const modules = [Autoplay, Pagination, EffectCoverflow];
 
 const defaultImages = [
-  { src: 'https://placehold.co/800x450/D42426/white?text=Foto+Familia+1', alt: 'Foto 1' },
-  { src: 'https://placehold.co/800x450/165B33/white?text=Foto+Familia+2', alt: 'Foto 2' },
-  { src: 'https://placehold.co/800x450/F8B229/white?text=Foto+Familia+3', alt: 'Foto 3' },
-  { src: 'https://placehold.co/800x450/2C3E50/white?text=Foto+Familia+4', alt: 'Foto 4' },
-  { src: 'https://placehold.co/800x450/D42426/white?text=Foto+Familia+5', alt: 'Foto 5' },
+  { src: 'https://images.unsplash.com/photo-1544967082-d9d25d867d66?q=80&w=800&auto=format&fit=crop', alt: 'Família no Natal' },
+  { src: 'https://images.unsplash.com/photo-1512353087810-25dfcd100962?q=80&w=800&auto=format&fit=crop', alt: 'Ceia de Natal' },
+  { src: 'https://images.unsplash.com/photo-1576919228636-1e6260171a9e?q=80&w=800&auto=format&fit=crop', alt: 'Decoração Natalina' },
+  { src: 'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=800&auto=format&fit=crop', alt: 'Presentes de Natal' },
 ];
 
 const images = computed(() => {
@@ -190,6 +189,13 @@ const handleKeyDown = (event) => {
   }
 };
 
+// Force re-render when images load
+const swiperKey = ref(0);
+import { watch } from 'vue';
+watch(() => props.customImages, () => {
+  swiperKey.value++;
+}, { deep: true });
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
 });
@@ -210,27 +216,29 @@ onUnmounted(() => {
         :centeredSlides="true"
         :slidesPerView="'auto'"
         :loop="true"
-        :speed="10000"
+        :speed="5000"
         :coverflowEffect="{
-          rotate: 15,
+          rotate: 0,
           stretch: 0,
-          depth: 300,
+          depth: 200,
           modifier: 1,
-          slideShadows: true,
+          slideShadows: false,
         }"
         :autoplay="{
           delay: 0,
           disableOnInteraction: false,
-          pauseOnMouseEnter: false
+          pauseOnMouseEnter: true
         }"
         :modules="modules"
         class="mySwiper"
+        :key="swiperKey"
       >
         <swiper-slide v-for="(img, index) in images" :key="index">
           <img 
             :src="img.src" 
             :alt="img.alt" 
             @click="openModal(index)"
+            @error="(e) => { e.target.src = 'https://placehold.co/800x450/333/white?text=Erro+Imagem'; }"
             class="carousel-image"
           />
         </swiper-slide>
@@ -238,59 +246,62 @@ onUnmounted(() => {
     </div>
 
     <!-- Modal de Imagem em Tela Cheia -->
-    <Transition name="modal">
-      <div 
-        v-if="isModalOpen" 
-        class="image-modal"
-        @click.self="closeModal"
-        @touchstart="handleTouchStart"
-        @touchmove="handleTouchMove"
-        @touchend="handleTouchEnd"
-        @mousedown="handleMouseDown"
-        @mousemove="handleMouseMove"
-        @mouseup="handleMouseUp"
-        @mouseleave="handleMouseUp"
-      >
-        <button class="modal-close" @click="closeModal" aria-label="Fechar">
-          ✕
-        </button>
-        
-        <button 
-          class="modal-nav modal-nav-prev" 
-          @click.stop="prevImage"
-          aria-label="Imagem anterior"
+    <!-- Modal de Imagem em Tela Cheia -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div 
+          v-if="isModalOpen" 
+          class="image-modal"
+          @click.self="closeModal"
+          @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mousemove="handleMouseMove"
+          @mouseup="handleMouseUp"
+          @mouseleave="handleMouseUp"
         >
-          ‹
-        </button>
-        
-        <div class="modal-image-container">
-          <img
-            ref="modalImageRef"
-            :src="images[currentImageIndex].src"
-            :alt="images[currentImageIndex].alt"
-            class="modal-image"
-            :style="{
-              transform: `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`,
-              transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-            }"
-            @dblclick="handleDoubleClick"
-            @click.stop
-          />
+          <button class="modal-close" @click="closeModal" aria-label="Fechar">
+            ✕
+          </button>
+          
+          <button 
+            class="modal-nav modal-nav-prev" 
+            @click.stop="prevImage"
+            aria-label="Imagem anterior"
+          >
+            ‹
+          </button>
+          
+          <div class="modal-image-container">
+            <img
+              ref="modalImageRef"
+              :src="images[currentImageIndex].src"
+              :alt="images[currentImageIndex].alt"
+              class="modal-image"
+              :style="{
+                transform: `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`,
+                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+              }"
+              @dblclick="handleDoubleClick"
+              @click.stop
+            />
+          </div>
+          
+          <button 
+            class="modal-nav modal-nav-next" 
+            @click.stop="nextImage"
+            aria-label="Próxima imagem"
+          >
+            ›
+          </button>
+          
+          <div class="modal-indicator">
+            {{ currentImageIndex + 1 }} / {{ images.length }}
+          </div>
         </div>
-        
-        <button 
-          class="modal-nav modal-nav-next" 
-          @click.stop="nextImage"
-          aria-label="Próxima imagem"
-        >
-          ›
-        </button>
-        
-        <div class="modal-indicator">
-          {{ currentImageIndex + 1 }} / {{ images.length }}
-        </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </section>
 </template>
 
@@ -396,7 +407,7 @@ onUnmounted(() => {
   height: 100%;
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
-  z-index: 10000;
+  z-index: 20001;
   display: flex;
   align-items: center;
   justify-content: center;

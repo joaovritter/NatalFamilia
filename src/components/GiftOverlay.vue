@@ -1,6 +1,13 @@
 <script setup>
 import { ref } from 'vue';
 
+const props = defineProps({
+  senderName: {
+    type: String,
+    default: 'Família'
+  }
+});
+
 const emit = defineEmits(['open']);
 const isOpened = ref(false);
 const isHidden = ref(false); // Para remover do DOM depois da animação
@@ -23,7 +30,7 @@ const openGift = () => {
 <template>
   <div v-if="!isHidden" class="gift-overlay" :class="{ 'fade-out': isOpened }">
     <div class="content">
-      <h1 class="sender-text">Você recebeu uma surpresa de<br><strong>Família Reis</strong></h1>
+      <h1 class="sender-text">Você recebeu uma surpresa de<br><strong>{{ senderName }}</strong></h1>
       
       <div class="gift-container" @click="openGift">
         <div class="gift-wrapper">

@@ -42,6 +42,7 @@ export const helmetConfig = helmet({
       connectSrc: ["'self'", "https://api.mercadopago.com"],
     },
   },
-  crossOriginEmbedderPolicy: false, // Permite recursos externos se necessário
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 });
 

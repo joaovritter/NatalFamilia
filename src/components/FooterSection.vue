@@ -1,8 +1,17 @@
+<script setup>
+defineProps({
+  showMarketing: {
+    type: Boolean,
+    default: true
+  }
+});
+</script>
+
 <template>
   <footer>
     <p class="love-note">Feito com amor para o nosso Natal de 2025</p>
     
-    <div class="saas-link">
+    <div v-if="showMarketing" class="saas-link">
       <p>Gostou? Crie um site mágico para sua família também.</p>
       <a href="#" class="cta-link">Criar Meu Natal Mágico ✨</a>
     </div>

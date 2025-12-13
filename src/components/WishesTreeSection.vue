@@ -5,13 +5,15 @@ import { ref, computed } from 'vue';
 const props = defineProps({
   backgroundImage: {
     type: String,
-    default: '' // URL da imagem de fundo - deixe vazio ou passe a URL
+    default: '' 
+  },
+  customOrnaments: {
+    type: Array,
+    default: null
   }
 });
 
-// Posições calculadas para formar um triângulo (Árvore)
-// top: % de cima para baixo, left: % da esquerda
-const ornaments = [
+const defaultOrnaments = [
   { id: 1, top: '15%', left: '50%', icon: '🌟', title: 'Esperança', text: 'Que a fé guie cada passo do seu novo ano.' },
   { id: 2, top: '35%', left: '40%', icon: '✈️', title: 'Viagens', text: 'Novos destinos e horizontes para explorar.' },
   { id: 3, top: '35%', left: '60%', icon: '❤️', title: 'Amor', text: 'Laços mais fortes e corações aquecidos.' },
@@ -24,6 +26,19 @@ const ornaments = [
   { id: 10, top: '75%', left: '80%', icon: '✨', title: 'Sabedoria', text: 'Clareza para as melhores escolhas.' },
 ];
 
+const ornaments = computed(() => {
+    return props.customOrnaments && props.customOrnaments.length > 0 
+        ? props.customOrnaments.map((o, i) => ({
+            ...o,
+            // Merge coordinates if needed, or assume customOrnaments has them.
+            // Actually, let's keep the positions from defaultOrnaments to ensure the tree shape
+            top: defaultOrnaments[i]?.top || '50%',
+            left: defaultOrnaments[i]?.left || '50%',
+            id: defaultOrnaments[i]?.id || i
+        }))
+        : defaultOrnaments;
+});
+
 const activeWish = ref(null);
 const isVisible = ref(false);
 
@@ -34,10 +49,12 @@ const openWish = (wish) => {
 
 const closeWish = () => {
   isVisible.value = false;
-  // Pequeno delay para limpar os dados após a animação de saída
-  setTimeout(() => {
-    activeWish.value = null;
-  }, 300);
+  activeWish.value = null; // Removed setTimeout for instant close
+};
+
+// Generate random animation delays for more natural look
+const getDelay = (index) => {
+    return `${(index * 0.2) % 2}s`;
 };
 </script>
 
@@ -59,13 +76,17 @@ const closeWish = () => {
       <div class="tree-trunk-shadow"></div>
 
       <button 
-        v-for="ornament in ornaments" 
+        v-for="(ornament, index) in ornaments" 
         :key="ornament.id"
         class="ornament-btn"
-        :style="{ top: ornament.top, left: ornament.left }"
+        :style="{ top: ornament.top, left: ornament.left, animationDelay: getDelay(index) }"
         @click="openWish(ornament)"
         aria-label="Ver desejo"
       >
+        <!-- Show Image if available -->
+        <img v-if="ornament.image" :src="ornament.image" class="ornament-image" />
+        <!-- If no image, show nothing (just the colored ball) or keep empty -->
+        
         <div class="glow-effect"></div>
       </button>
     </div>
@@ -75,11 +96,13 @@ const closeWish = () => {
         <div class="wish-card">
           <button class="close-btn" @click="closeWish">×</button>
           
-          <div class="wish-icon-wrapper">
-            <span class="wish-icon">{{ activeWish.icon }}</span>
+          <h3 class="wish-title">{{ activeWish.title }}</h3>
+
+          <div class="wish-content-wrapper">
+             <img v-if="activeWish.image" :src="activeWish.image" class="wish-modal-image" />
+             <!-- If no image, show title directly or nothing extra -->
           </div>
           
-          <h3 class="wish-title">{{ activeWish.title }}</h3>
           <p class="wish-text">{{ activeWish.text }}</p>
           
           <div class="wish-footer">
@@ -212,13 +235,28 @@ const closeWish = () => {
   transition: all 0.3s ease;
   z-index: 10;
   box-shadow: 0 0 15px rgba(248, 178, 41, 0.6);
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
+  display: flex; /* Centering content */
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Clip image to circle */
+  padding: 0;
+}
+
+.ornament-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ornament-icon {
+  font-size: 1.2rem;
 }
 
 /* Animação de Flutuação */
 @keyframes float {
   0%, 100% { transform: translate(-50%, -50%) translateY(0); }
-  50% { transform: translate(-50%, -50%) translateY(-10px); }
+  50% { transform: translate(-50%, -50%) translateY(-15px); }
 }
 
 /* Efeito de brilho pulsante */
@@ -274,6 +312,17 @@ const closeWish = () => {
 .wish-icon-wrapper {
   font-size: 4rem;
   margin-bottom: 20px;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.wish-modal-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--color-gold, #F8B229);
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 

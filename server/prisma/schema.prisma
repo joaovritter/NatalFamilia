@@ -44,6 +44,8 @@ model Family {
   payment_id Int?
   payment    Payment? @relation(fields: [payment_id], references: [id])
   photos     String   // JSON string
+  message    String?  @db.VarChar(2000)
+  wishes     String?  @db.Text // JSON string para os desejos da árvore
   created_at DateTime @default(now())
 
   @@map("families")

@@ -5,7 +5,6 @@ import { useRouter, useRoute } from 'vue-router';
 /* --- Componentes --- */
 import GiftOverlay from '../components/GiftOverlay.vue';
 import HeroSection from '../components/HeroSection.vue';
-import CountdownSection from '../components/CountdownSection.vue';
 import ImageCarousel from '../components/ImageCarousel.vue';
 import MessageSection from '../components/MessageSection.vue';
 import WishesTreeSection from '../components/WishesTreeSection.vue';
@@ -15,7 +14,9 @@ import FooterSection from '../components/FooterSection.vue';
 const router = useRouter();
 const route = useRoute();
 const playGlobalAudio = inject('playGlobalAudio');
-const familyName = ref('Reis');
+const familyName = ref('');
+const familyMessage = ref(null);
+const familyWishes = ref(null);
 const familyPhotos = ref([]);
 
 // Determina se é uma visualização personalizada
@@ -24,22 +25,27 @@ const isPersonalized = computed(() => !!route.params.familyName);
 onMounted(async () => {
   if (isPersonalized.value) {
     try {
-      // Tenta buscar dados da família do backend
-      // O nome na URL pode ser usado para busca
       const name = route.params.familyName;
-      // Em um cenário real, usaríamos um ID ou slug único, mas vamos usar o nome por enquanto
-      // Se não tiver backend rodando ou falhar, usa o nome da URL e fotos padrão
       
-      // Tenta buscar do backend (opcional, se falhar usa defaults)
       try {
         const response = await fetch(`http://localhost:3000/api/family/${encodeURIComponent(name)}`);
         if (response.ok) {
           const data = await response.json();
           familyName.value = data.name;
+          familyMessage.value = data.message;
+          // Assign parsed wishes and prepend server URL to images
+          familyWishes.value = Array.isArray(data.wishes) 
+            ? data.wishes.map(w => ({
+              ...w,
+              image: w.image ? `http://localhost:3000${w.image}` : null
+            })) 
+            : [];
           // Adiciona prefixo do servidor para as imagens
           familyPhotos.value = data.photos.map(photo => `http://localhost:3000${photo}`);
         } else {
             familyName.value = name;
+            familyMessage.value = null;
+            familyWishes.value = null;
         }
       } catch (e) {
         console.warn('Backend não disponível ou erro ao buscar família:', e);
@@ -64,19 +70,18 @@ const handleGiftOpen = () => {
 
 <template>
   <div class="home-view">
-    <GiftOverlay @open="handleGiftOpen" />
+    <GiftOverlay @open="handleGiftOpen" :sender-name="'Família ' + familyName" />
 
     <main>
       <HeroSection :familyName="familyName" :showCreateButton="!isPersonalized" />
       
-      <CountdownSection />
       <ImageCarousel :custom-images="familyPhotos" />
-      <MessageSection />
-      <WishesTreeSection background-image="/tree.png" />
+      <MessageSection :text="familyMessage" />
+      <WishesTreeSection background-image="/tree.png" :customOrnaments="familyWishes" />
       <GuestbookSection />
     </main>
 
-    <FooterSection />
+    <FooterSection :showMarketing="!isPersonalized" />
   </div>
 </template>
 

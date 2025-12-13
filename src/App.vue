@@ -4,7 +4,6 @@ import { RouterView } from 'vue-router';
 
 /* --- Componentes Globais --- */
 import ChristmasLights from './components/ChristmasLights.vue';
-import SnowEffect from './components/SnowEffect.vue';
 import GoldDustEffect from './components/GoldDustEffect.vue';
 import AudioPlayer from './components/AudioPlayer.vue';
 
@@ -26,7 +25,6 @@ provide('playGlobalAudio', playAudio);
 <template>
   <div class="app-wrapper">
     <ChristmasLights />
-    <SnowEffect />
     <GoldDustEffect />
     
     <AudioPlayer ref="audioPlayerRef" />

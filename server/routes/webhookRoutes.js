@@ -130,8 +130,7 @@ async function handlePaymentNotification(paymentId) {
 async function handleMerchantOrderNotification(orderId) {
   try {
     console.log('Processando notificação de merchant_order:', orderId);
-    // Implementar lógica similar se necessário
-    // Por enquanto, focamos em payment notifications
+
   } catch (error) {
     console.error('Erro ao processar merchant_order:', error);
   }

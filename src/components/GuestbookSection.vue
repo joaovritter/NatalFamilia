@@ -2,13 +2,7 @@
 import { ref } from 'vue';
 
 // Dados simulados (depois virão do banco de dados)
-const messages = ref([
-  { id: 1, name: 'Tia Márcia', text: 'Que este Natal traga luz para nossa família! Amo vocês!', date: '2 horas atrás' },
-  { id: 2, name: 'Primo João', text: 'Saudades de todos! Ano que vem estarei aí sem falta.', date: '5 horas atrás' },
-  { id: 3, name: 'Vovó Ana', text: 'Minha receita de rabanada está esperando por vocês.', date: 'Ontem' },
-  { id: 4, name: 'Lucas e Bia', text: 'Feliz Natal! O site ficou lindo demais!', date: 'Ontem' },
-  { id: 5, name: 'Roberto', text: 'Um brinde à nossa união!', date: '2 dias atrás' },
-]);
+const messages = ref([]);
 
 const isModalOpen = ref(false);
 const newMessage = ref({ name: '', text: '' });
