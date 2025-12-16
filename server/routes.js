@@ -2,44 +2,45 @@ import express from 'express';
 import prisma from './config/prisma.js';
 import { processPayment } from './payment.js';
 import upload from './upload.js';
+import { nanoid } from 'nanoid';
 
-// Importar novas rotas seguras
+
 import siteRoutes from './routes/siteRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 
 const router = express.Router();
 
-// ============================================
-// NOVAS ROTAS SEGURAS (PostgreSQL + Prisma)
-// ============================================
 
-// Rotas de criação e visualização de sites (com validação completa)
+
+
+
+
 router.use('/', siteRoutes);
 
-// Webhook do Mercado Pago (validação crítica)
+
 router.use('/', webhookRoutes);
 
-// ============================================
-// ROTAS LEGADAS (Migradas para Postgres)
-// ============================================
 
-// --- Pagamentos ---
 
-// Criar Pagamento Pix
-// Criar Pagamento (Via Bricks)
+
+
+
+
+
+
 router.post('/payment', async (req, res) => {
   try {
     const paymentData = req.body;
     console.log('Recebido payload do Brick:', JSON.stringify(paymentData, null, 2));
 
-    // O Brick envia todos os dados necessários
+
     paymentData.description = 'Natal da Família';
-    paymentData.transaction_amount = 29.90; // Forçar valor no backend por segurança
+    paymentData.transaction_amount = 29.90;
 
     const mpResponse = await processPayment(paymentData);
 
-    // O objeto retornado pelo SDK tem a estrutura { id, status, ... } ou response.id dependendo da versão/wrapper
-    // No wrapper novo v2: response é o objeto do pagamento direto
+
+
     const payment = mpResponse;
 
     const mpId = payment.id;
@@ -49,7 +50,7 @@ router.post('/payment', async (req, res) => {
 
     const newPayment = await prisma.payment.create({
       data: {
-        mp_payment_id: String(mpId), // Ensure string
+        mp_payment_id: String(mpId),
         status: status,
         qr_code: qrCode,
         qr_code_base64: qrCodeBase64
@@ -57,7 +58,7 @@ router.post('/payment', async (req, res) => {
     });
 
     res.json({
-      id: newPayment.id, // ID interno
+      id: newPayment.id,
       mp_payment_id: mpId,
       status: status,
       qr_code: qrCode,
@@ -70,7 +71,7 @@ router.post('/payment', async (req, res) => {
   }
 });
 
-// Verificar Status do Pagamento
+
 router.get('/payment/:id', async (req, res) => {
   const id = parseInt(req.params.id);
 
@@ -87,9 +88,9 @@ router.get('/payment/:id', async (req, res) => {
       return res.status(404).json({ error: 'Pagamento não encontrado' });
     }
 
-    // Em produção, você consultaria a API do Mercado Pago novamente aqui para garantir o status atual
-    // Para simplificar, vamos assumir que o webhook (não implementado aqui) ou polling atualizaria o banco
-    // OU vamos simular aprovação se passar um parâmetro ?simular=true
+
+
+
 
     if (req.query.simular === 'true') {
       const updatedPayment = await prisma.payment.update({
@@ -106,44 +107,57 @@ router.get('/payment/:id', async (req, res) => {
   }
 });
 
-// --- Família ---
 
-// Criar/Salvar Família (Protegido por Payment ID)
+
 const uploadFields = upload.fields([
-  { name: 'photos', maxCount: 10 },
-  { name: 'wish_images', maxCount: 10 }
+  { name: 'photos', maxCount: 20 },
+  { name: 'wish_images', maxCount: 15 },
+  { name: 'timeline_photos', maxCount: 20 }
 ]);
 
 router.post('/family', uploadFields, async (req, res) => {
   const { name, paymentId } = req.body;
 
-  // Acessar arquivos corretamente com .fields()
   const photosFiles = req.files['photos'] || [];
   const wishFiles = req.files['wish_images'] || [];
+  const timelineFiles = req.files['timeline_photos'] || [];
 
   if (!name || !paymentId) {
     return res.status(400).json({ error: 'Nome e ID do pagamento são obrigatórios' });
   }
 
   try {
-    // Verificar se pagamento foi aprovado
     const payment = await prisma.payment.findUnique({
       where: { id: parseInt(paymentId) }
     });
 
     if (!payment) return res.status(400).json({ error: 'Pagamento inválido' });
 
-    if (payment.status !== 'approved') {
-      // Permissivo para testes
-    }
-
-    // Processar fotos da galeria
+    // 1. General Photos (Carousel) - Just paths
     const photoPaths = photosFiles.map(f => `/uploads/${f.filename}`);
     const photosJson = JSON.stringify(photoPaths);
 
-    // Processar imagens dos desejos
-    // Lógica: O frontend envia wishes como JSON. Se um wish tem imagem, ela está na array wishFiles.
-    // O frontend deve garantir a ordem ou enviar metadados. Vamos assumir ordem sequencial dos que tem imagem.
+    // 2. Timeline Photos (Metadata)
+    const timelinePaths = timelineFiles.map(f => `/uploads/${f.filename}`);
+    let timelineData = [];
+
+    if (req.body.timeline_metadata) {
+      try {
+        const metadata = JSON.parse(req.body.timeline_metadata);
+        // Map metadata to uploaded files. 
+        // NOTE: The order of req.files['timeline_photos'] should match the client-side append order
+        timelineData = timelinePaths.map((path, index) => ({
+          src: path,
+          date: metadata[index]?.date || null,
+          caption: metadata[index]?.caption || null
+        }));
+      } catch (e) {
+        console.error("Erro parsing timeline_metadata", e);
+      }
+    }
+    const timelineJson = JSON.stringify(timelineData);
+
+
     let wishesData = [];
     if (req.body.wishes) {
       try {
@@ -153,7 +167,8 @@ router.post('/family', uploadFields, async (req, res) => {
           if (wish.hasNewImage && fileIndex < wishFiles.length) {
             const foundFile = wishFiles[fileIndex];
             fileIndex++;
-            return { ...wish, image: `/uploads/${foundFile.filename}`, icon: null }; // Remove icon if image exists
+
+            return { ...wish, image: `/uploads/${foundFile.filename}`, icon: null };
           }
           return wish;
         });
@@ -162,21 +177,36 @@ router.post('/family', uploadFields, async (req, res) => {
       }
     }
 
+    const shortCode = nanoid(6);
+
+
+    const cleanName = name.trim().replace(/\s+/g, '-');
+
+
+    const uniqueSlug = `${cleanName}-${shortCode}`;
+
     try {
       const newFamily = await prisma.family.create({
         data: {
           name: name,
+          slug: uniqueSlug,
           payment_id: parseInt(paymentId),
-          photos: photosJson,
+          photos: photosJson, // General Carousel
+          timeline: timelineJson, // Photo Timeline
+          youtubeLink: req.body.youtubeLink || null,
           message: req.body.message || null,
           wishes: JSON.stringify(wishesData)
         }
       });
-      res.json({ success: true, familyId: newFamily.id });
+
+      res.json({
+        success: true,
+        id: newFamily.id,
+        slug: newFamily.slug
+      });
+
     } catch (err) {
-      if (err.code === 'P2002') { // Prisma unique constraint error
-        return res.status(409).json({ error: 'Nome de família já existe' });
-      }
+      console.error('Erro ao criar família no banco:', err);
       throw err;
     }
   } catch (error) {
@@ -185,26 +215,107 @@ router.post('/family', uploadFields, async (req, res) => {
   }
 });
 
-// Obter Família
-router.get('/family/:name', async (req, res) => {
-  const name = req.params.name;
 
+router.get('/family/:slug', async (req, res) => {
   try {
+    const { slug } = req.params;
+
+
     const family = await prisma.family.findUnique({
-      where: { name: name }
+      where: { slug: slug }
+    });
+
+    if (!family) {
+      return res.status(404).json({ error: 'Família não encontrada' });
+    }
+
+
+
+    let processedWishes = [];
+    if (family.wishes) {
+      try {
+        processedWishes = JSON.parse(family.wishes);
+      } catch (e) {
+        processedWishes = [];
+      }
+    }
+
+    let processedPhotos = [];
+    if (family.photos) {
+      try {
+        processedPhotos = JSON.parse(family.photos);
+      } catch (e) {
+        processedPhotos = [];
+      }
+    }
+
+    let processedTimeline = [];
+    if (family.timeline) {
+      try {
+        processedTimeline = JSON.parse(family.timeline);
+      } catch (e) {
+        processedTimeline = [];
+      }
+    }
+
+    res.json({
+      ...family,
+      wishes: processedWishes,
+      photos: processedPhotos,
+      timeline: processedTimeline
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar família' });
+  }
+});
+
+// --- Time Capsule Routes ---
+
+router.post('/capsule', async (req, res) => {
+  try {
+    const { familySlug, sender, message } = req.body;
+
+    const family = await prisma.family.findUnique({
+      where: { slug: familySlug }
     });
 
     if (!family) return res.status(404).json({ error: 'Família não encontrada' });
 
-    res.json({
-      name: family.name,
-      photos: JSON.parse(family.photos),
-      message: family.message,
-      wishes: family.wishes ? JSON.parse(family.wishes) : []
+    const newMsg = await prisma.capsuleMessage.create({
+      data: {
+        familyId: family.id,
+        sender,
+        message
+      }
     });
+
+    res.json(newMsg);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Erro ao buscar família' });
+    res.status(500).json({ error: 'Erro ao salvar mensagem' });
+  }
+});
+
+router.get('/capsule/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const family = await prisma.family.findUnique({
+      where: { slug },
+      include: {
+        capsule_messages: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+
+    if (!family) return res.status(404).json({ error: 'Família não encontrada' });
+
+    res.json(family.capsule_messages);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao buscar cápsula' });
   }
 });
 

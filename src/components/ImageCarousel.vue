@@ -32,12 +32,10 @@ const images = computed(() => {
   return defaultImages;
 });
 
-// Modal state
 const isModalOpen = ref(false);
 const currentImageIndex = ref(0);
 const modalImageRef = ref(null);
 
-// Zoom state
 const scale = ref(1);
 const translateX = ref(0);
 const translateY = ref(0);
@@ -45,12 +43,10 @@ const isDragging = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
 const lastTouchDistance = ref(0);
 
-// Open modal
 const openModal = (index) => {
   currentImageIndex.value = index;
   isModalOpen.value = true;
   resetZoom();
-  // Prevent body scroll
   document.body.style.overflow = 'hidden';
 };
 
@@ -58,18 +54,15 @@ const openModal = (index) => {
 const closeModal = () => {
   isModalOpen.value = false;
   resetZoom();
-  // Restore body scroll
   document.body.style.overflow = '';
 };
 
-// Reset zoom
 const resetZoom = () => {
   scale.value = 1;
   translateX.value = 0;
   translateY.value = 0;
 };
 
-// Double click zoom (desktop)
 const handleDoubleClick = (event) => {
   if (scale.value === 1) {
     scale.value = 2;
@@ -83,7 +76,6 @@ const handleDoubleClick = (event) => {
   }
 };
 
-// Touch handlers for pinch zoom (mobile)
 const handleTouchStart = (event) => {
   if (event.touches.length === 2) {
     event.preventDefault();
@@ -137,13 +129,11 @@ const handleTouchEnd = () => {
   lastTouchDistance.value = 0;
   isDragging.value = false;
   
-  // Reset if zoomed out too much
   if (scale.value < 1) {
     resetZoom();
   }
 };
 
-// Mouse drag (desktop)
 const handleMouseDown = (event) => {
   if (scale.value > 1) {
     isDragging.value = true;
@@ -165,7 +155,6 @@ const handleMouseUp = () => {
   isDragging.value = false;
 };
 
-// Navigation
 const nextImage = () => {
   currentImageIndex.value = (currentImageIndex.value + 1) % images.length;
   resetZoom();
@@ -176,7 +165,6 @@ const prevImage = () => {
   resetZoom();
 };
 
-// Keyboard navigation
 const handleKeyDown = (event) => {
   if (!isModalOpen.value) return;
   
@@ -189,7 +177,6 @@ const handleKeyDown = (event) => {
   }
 };
 
-// Force re-render when images load
 const swiperKey = ref(0);
 import { watch } from 'vue';
 watch(() => props.customImages, () => {
@@ -233,11 +220,10 @@ onUnmounted(() => {
         class="mySwiper"
         :key="swiperKey"
       >
-        <swiper-slide v-for="(img, index) in images" :key="index">
+        <swiper-slide v-for="(img, index) in images" :key="index" @click="openModal(index)">
           <img 
             :src="img.src" 
             :alt="img.alt" 
-            @click="openModal(index)"
             @error="(e) => { e.target.src = 'https://placehold.co/800x450/333/white?text=Erro+Imagem'; }"
             class="carousel-image"
           />
@@ -245,8 +231,6 @@ onUnmounted(() => {
       </swiper>
     </div>
 
-    <!-- Modal de Imagem em Tela Cheia -->
-    <!-- Modal de Imagem em Tela Cheia -->
     <Teleport to="body">
       <Transition name="modal">
         <div 
@@ -307,8 +291,8 @@ onUnmounted(() => {
 
 <style scoped>
 .gallery-section {
-  padding: clamp(40px, 8vw, 60px) 0;
-  background: linear-gradient(to bottom, #e8f5e9 0%, var(--color-green, #165B33) 20%, var(--color-green, #165B33) 80%, #1a1a1a 100%);
+  padding: clamp(60px, 10vw, 80px) 0;
+  background: linear-gradient(to bottom, #0f1c13 0%, #142419 100%);
   color: white;
   text-align: center;
   overflow-x: hidden;
@@ -320,7 +304,7 @@ onUnmounted(() => {
 
 .gallery-title {
   font-family: var(--font-title, 'Great Vibes', cursive);
-  font-size: clamp(2.5rem, 2rem + 3vw, 4rem); /* Fluid font size */
+  font-size: clamp(2.5rem, 2rem + 3vw, 4rem);
   margin-bottom: 30px;
   color: var(--color-gold, #F8B229);
   text-shadow: 0 0 30px rgba(248, 178, 41, 0.4);
@@ -351,7 +335,6 @@ onUnmounted(() => {
 .swiper-slide {
   background-position: center;
   background-size: cover;
-  /* Mobile-first: relative width */
   width: 70vw; 
   height: 50vh;
   max-height: 400px;
@@ -361,7 +344,6 @@ onUnmounted(() => {
   border: 3px solid var(--color-gold, #F8B229);
 }
 
-/* Desktop overrides */
 @media (min-width: 768px) {
   .swiper-slide {
     width: 400px;
@@ -398,7 +380,6 @@ onUnmounted(() => {
   transform: scale(1.02);
 }
 
-/* Modal Styles */
 .image-modal {
   position: fixed;
   top: 0;
@@ -521,7 +502,6 @@ onUnmounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Mobile optimizations */
 @media (max-width: 767px) {
   .modal-close {
     top: 10px;
@@ -556,7 +536,6 @@ onUnmounted(() => {
   }
 }
 
-/* Transitions */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.3s ease;

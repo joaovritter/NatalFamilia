@@ -21,25 +21,33 @@ const handleCreateNatal = () => {
 
 <template>
   <header>
-    <h1>Natal da Família {{ familyName }}</h1>
-    <p class="subtitle">Celebrando o amor, a união e a alegria.</p>
-    <button v-if="showCreateButton" class="create-button" @click="handleCreateNatal">
-      <span class="button-text">✨ Criar meu Natal Mágico</span>
-      <span class="button-shine"></span>
-    </button>
+    <div class="snow-overlay">
+        <div class="snowflake" v-for="n in 30" :key="n" :style="`--delay: ${Math.random() * 5}s; --duration: ${5 + Math.random() * 5}s; --pos: ${Math.random() * 100}vw`">❄</div>
+    </div>
+
+    <div class="hero-content animate-on-scroll visible">
+        <h1>Natal da Família {{ familyName }}</h1>
+        <p class="subtitle">Celebrando o amor, a união e a alegria.</p>
+        <button v-if="showCreateButton" class="create-button" @click="handleCreateNatal">
+        <span class="button-text">✨ Criar meu Natal Mágico</span>
+        <span class="button-shine"></span>
+        </button>
+    </div>
+    
+    <div class="bottom-gradient"></div>
   </header>
 </template>
 
 <style scoped>
 header {
+  position: relative;
   min-height: 100vh;
   height: 100vh;
   max-height: 100vh;
-  /* Mobile-optimized background */
   background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
-  background-attachment: scroll; /* Fixed attachment can be buggy on mobile */
+  background-attachment: scroll;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -50,26 +58,24 @@ header {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
-/* Parallax effect only for desktop where supported */
-@media (min-width: 1024px) {
-  header {
-    background-attachment: fixed;
-  }
+.bottom-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(to bottom, transparent, #0f1c13);
+    pointer-events: none;
+    z-index: 2;
 }
 
-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100px; /* Smaller gradient on mobile */
-  background: linear-gradient(to bottom, transparent, #fff5f5);
-  pointer-events: none;
-}
+.snow-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+.snowflake { position: absolute; top: -20px; left: var(--pos); color: white; font-size: 1.5rem; opacity: 0.8; animation: snowfall var(--duration) linear infinite; animation-delay: var(--delay); }
+
+header::after { display: none; }
 
 @media (min-width: 768px) {
   header::after {
@@ -79,12 +85,11 @@ header::after {
 
 h1 {
   font-family: var(--font-title, 'Great Vibes', cursive);
-  /* Fluid font size for title: 3.5rem mobile -> 6rem desktop */
   font-size: clamp(3.5rem, 2.5rem + 4vw, 6rem);
   margin-bottom: 10px;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.5);
   animation: fadeInDown 1.5s ease-out;
-  padding: 0 10px; /* Prevent text touching edges */
+  padding: 0 10px;
   line-height: 1.1;
 }
 
@@ -193,7 +198,6 @@ h1 {
   }
 }
 
-/* Mobile optimizations */
 @media (max-width: 767px) {
   .create-button {
     margin-top: 30px;

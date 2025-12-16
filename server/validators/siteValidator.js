@@ -5,7 +5,6 @@ import { JSDOM } from 'jsdom';
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
-// Função para sanitizar HTML e prevenir XSS
 const sanitizeHtml = (dirty) => {
   return purify.sanitize(dirty, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
@@ -13,7 +12,6 @@ const sanitizeHtml = (dirty) => {
   });
 };
 
-// Schema de validação para criação de site
 const createSiteSchema = Joi.object({
   familyName: Joi.string()
     .trim()
@@ -44,7 +42,6 @@ const createSiteSchema = Joi.object({
     })
 });
 
-// Middleware de validação
 export const validateCreateSite = (req, res, next) => {
   const { error, value } = createSiteSchema.validate(req.body, {
     abortEarly: false,
@@ -62,12 +59,10 @@ export const validateCreateSite = (req, res, next) => {
     });
   }
 
-  // Sanitizar HTML na mensagem para prevenir XSS
   if (value.message) {
     value.message = sanitizeHtml(value.message);
   }
 
-  // Sanitizar nome da família também
   if (value.familyName) {
     value.familyName = sanitizeHtml(value.familyName);
   }

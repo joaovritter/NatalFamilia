@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-// Prop para a imagem de fundo - você pode passar a URL da imagem
 const props = defineProps({
   backgroundImage: {
     type: String,
@@ -30,8 +29,6 @@ const ornaments = computed(() => {
     return props.customOrnaments && props.customOrnaments.length > 0 
         ? props.customOrnaments.map((o, i) => ({
             ...o,
-            // Merge coordinates if needed, or assume customOrnaments has them.
-            // Actually, let's keep the positions from defaultOrnaments to ensure the tree shape
             top: defaultOrnaments[i]?.top || '50%',
             left: defaultOrnaments[i]?.left || '50%',
             id: defaultOrnaments[i]?.id || i
@@ -49,10 +46,9 @@ const openWish = (wish) => {
 
 const closeWish = () => {
   isVisible.value = false;
-  activeWish.value = null; // Removed setTimeout for instant close
+  activeWish.value = null;
 };
 
-// Generate random animation delays for more natural look
 const getDelay = (index) => {
     return `${(index * 0.2) % 2}s`;
 };
@@ -72,7 +68,6 @@ const getDelay = (index) => {
       />
       <div v-else class="tree-shape"></div>
       
-      <!-- Sombra do tronco de árvore -->
       <div class="tree-trunk-shadow"></div>
 
       <button 
@@ -83,9 +78,8 @@ const getDelay = (index) => {
         @click="openWish(ornament)"
         aria-label="Ver desejo"
       >
-        <!-- Show Image if available -->
         <img v-if="ornament.image" :src="ornament.image" class="ornament-image" />
-        <!-- If no image, show nothing (just the colored ball) or keep empty -->
+        
         
         <div class="glow-effect"></div>
       </button>
@@ -98,9 +92,8 @@ const getDelay = (index) => {
           
           <h3 class="wish-title">{{ activeWish.title }}</h3>
 
-          <div class="wish-content-wrapper">
+          <div class="wish-content-wrapper" style="display: flex; justify-content: center;">
              <img v-if="activeWish.image" :src="activeWish.image" class="wish-modal-image" />
-             <!-- If no image, show title directly or nothing extra -->
           </div>
           
           <p class="wish-text">{{ activeWish.text }}</p>
@@ -111,21 +104,32 @@ const getDelay = (index) => {
         </div>
       </div>
     </Transition>
+    
+    <div class="bottom-gradient"></div>
   </section>
 </template>
 
 <style scoped>
 .tree-section {
-  padding: 60px 20px 100px;
-  /* Fallback: cor de fundo caso não tenha imagem */
-  background-color: #1a2a1d;
+  padding: 280px 20px 100px; /* Significantly increased top padding to clear the 400px/150px gradient overlap */
+  background: linear-gradient(to bottom, #1a2a1d 0%, #0f1c13 100%);
   position: relative;
   overflow: hidden;
   text-align: center;
   min-height: 80vh;
 }
 
-/* Overlay escuro para melhorar legibilidade */
+.bottom-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 150px;
+    background: linear-gradient(to bottom, transparent, #0f1c13);
+    pointer-events: none;
+    z-index: 5;
+}
+
 .tree-section::before {
   content: '';
   position: absolute;
@@ -133,12 +137,12 @@ const getDelay = (index) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4); /* Ajuste a opacidade (0.0 a 1.0) para controlar o escurecimento */
+  /* Fade-in overlay to avoid hard line at top */
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 15%);
   z-index: 0;
   pointer-events: none;
 }
 
-/* Garantir que o conteúdo fique acima do overlay */
 .tree-section > * {
   position: relative;
   z-index: 1;
@@ -158,16 +162,14 @@ const getDelay = (index) => {
   font-weight: 300;
 }
 
-/* Container da Árvore */
 .tree-container {
   position: relative;
   width: 100%;
   max-width: 600px;
-  height: 600px; /* Altura fixa para manter proporção */
+  height: 600px;
   margin: 0 auto;
 }
 
-/* Imagem da árvore substituindo o triângulo */
 .tree-image {
   position: absolute;
   top: 0;
@@ -179,10 +181,9 @@ const getDelay = (index) => {
   object-fit: contain;
   z-index: 0;
   filter: drop-shadow(0 0 20px rgba(248, 178, 41, 0.2));
-  pointer-events: none; /* Permite clicar nos ornamentos acima */
+  pointer-events: none;
 }
 
-/* Sombra do tronco de árvore */
 .tree-trunk-shadow {
   position: absolute;
   bottom: 0;
@@ -197,7 +198,6 @@ const getDelay = (index) => {
   filter: blur(8px);
 }
 
-/* O Formato Triangular (Fundo sutil) - Fallback quando não há imagem */
 .tree-shape {
   position: absolute;
   top: 0;
@@ -207,11 +207,10 @@ const getDelay = (index) => {
   height: 0;
   border-left: 300px solid transparent;
   border-right: 300px solid transparent;
-  border-bottom: 500px solid rgba(22, 91, 51, 0.1); /* Verde muito sutil */
+  border-bottom: 500px solid rgba(22, 91, 51, 0.1);
   filter: drop-shadow(0 0 20px rgba(248, 178, 41, 0.1));
 }
 
-/* Linha central decorativa (Tronco etéreo) - apenas quando usar triângulo */
 .tree-shape::after {
   content: '';
   position: absolute;
@@ -222,7 +221,6 @@ const getDelay = (index) => {
   background: linear-gradient(to bottom, transparent, rgba(248, 178, 41, 0.3), transparent);
 }
 
-/* Os Botões (Luzes) */
 .ornament-btn {
   position: absolute;
   width: 40px;
@@ -231,15 +229,16 @@ const getDelay = (index) => {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  transform: translate(-50%, -50%); /* Centralizar no ponto */
+  transform: translate(-50%, -50%);
   transition: all 0.3s ease;
   z-index: 10;
   box-shadow: 0 0 15px rgba(248, 178, 41, 0.6);
-  animation: float 4s ease-in-out infinite;
-  display: flex; /* Centering content */
+  box-shadow: 0 0 15px rgba(248, 178, 41, 0.6);
+  animation: float 4s ease-in-out infinite, twinkle 2s ease-in-out infinite alternate;
+  display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Clip image to circle */
+  overflow: hidden;
   padding: 0;
 }
 
@@ -253,13 +252,11 @@ const getDelay = (index) => {
   font-size: 1.2rem;
 }
 
-/* Animação de Flutuação */
 @keyframes float {
   0%, 100% { transform: translate(-50%, -50%) translateY(0); }
   50% { transform: translate(-50%, -50%) translateY(-15px); }
 }
 
-/* Efeito de brilho pulsante */
 .glow-effect {
   position: absolute;
   top: 50%;
@@ -283,7 +280,6 @@ const getDelay = (index) => {
   box-shadow: 0 0 30px rgba(248, 178, 41, 1);
 }
 
-/* Modal de Revelação (Wish Card) */
 .wish-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -308,7 +304,6 @@ const getDelay = (index) => {
   border: 2px solid var(--color-gold, #F8B229);
 }
 
-/* Ícone grande no topo do card */
 .wish-icon-wrapper {
   font-size: 4rem;
   margin-bottom: 20px;
@@ -366,14 +361,13 @@ const getDelay = (index) => {
   line-height: 1;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
   .tree-section {
     padding: 40px 15px 80px;
   }
   
   .tree-container {
-    height: 400px; /* Menor no mobile */
+    height: 400px;
   }
   
   .tree-image {

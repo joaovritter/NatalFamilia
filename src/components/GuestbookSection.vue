@@ -12,13 +12,15 @@ const closeModal = () => isModalOpen.value = false;
 
 const sendMessage = () => {
   if (!newMessage.value.name || !newMessage.value.text) return;
-  // Lógica de envio virá depois
+  
   messages.value.unshift({
     id: Date.now(),
     name: newMessage.value.name,
     text: newMessage.value.text,
     date: 'Agora mesmo'
   });
+  
+  newMessage.value = { name: '', text: '' };
   newMessage.value = { name: '', text: '' };
   closeModal();
 };
@@ -66,7 +68,8 @@ const sendMessage = () => {
 <style scoped>
 .guestbook-section {
   padding: 80px 20px;
-  background: linear-gradient(to bottom, #1a1a1a 0%, #2C3E50 100%); /* Fundo escuro para destacar os cartões */
+  /* Seamless Gradient: Starts where Timeline ended (#050a07), flows to near black */
+  background: linear-gradient(to bottom, #050a07 0%, #020403 100%);
   position: relative;
 }
 

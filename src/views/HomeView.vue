@@ -8,48 +8,70 @@ import HeroSection from '../components/HeroSection.vue';
 import ImageCarousel from '../components/ImageCarousel.vue';
 import MessageSection from '../components/MessageSection.vue';
 import WishesTreeSection from '../components/WishesTreeSection.vue';
+import TimeCapsuleSection from '../components/TimeCapsuleSection.vue';
 import GuestbookSection from '../components/GuestbookSection.vue';
 import FooterSection from '../components/FooterSection.vue';
 
 const router = useRouter();
 const route = useRoute();
 const playGlobalAudio = inject('playGlobalAudio');
+const setAudioSource = inject('setAudioSource');
 const familyName = ref('');
 const familyMessage = ref(null);
 const familyWishes = ref(null);
 const familyPhotos = ref([]);
+const familyTimeline = ref([]);
 
-// Determina se é uma visualização personalizada
 const isPersonalized = computed(() => !!route.params.familyName);
 
 onMounted(async () => {
   if (isPersonalized.value) {
     try {
-      const name = route.params.familyName;
+  
+      const slug = route.params.familyName;
       
       try {
-        const response = await fetch(`http://localhost:3000/api/family/${encodeURIComponent(name)}`);
+
+        const response = await fetch(`http://localhost:3000/api/family/${slug}`);
+        
         if (response.ok) {
           const data = await response.json();
-          familyName.value = data.name;
+          
+
+          familyName.value = data.name; 
           familyMessage.value = data.message;
-          // Assign parsed wishes and prepend server URL to images
+
+
           familyWishes.value = Array.isArray(data.wishes) 
             ? data.wishes.map(w => ({
               ...w,
               image: w.image ? `http://localhost:3000${w.image}` : null
             })) 
             : [];
-          // Adiciona prefixo do servidor para as imagens
-          familyPhotos.value = data.photos.map(photo => `http://localhost:3000${photo}`);
+
+          // General Carousel Photos (Simple Paths)
+          familyPhotos.value = Array.isArray(data.photos)
+             ? data.photos.map(photo => `http://localhost:3000${photo}`)
+             : [];
+             
+          // Timeline Photos (Objects)
+          familyTimeline.value = Array.isArray(data.timeline)
+            ? data.timeline.map(item => ({
+                ...item,
+                src: `http://localhost:3000${item.src}`
+            }))
+            : [];
+             
+           if (data.youtubeLink && setAudioSource) {
+               setAudioSource(data.youtubeLink);
+           }
+             
         } else {
-            familyName.value = name;
-            familyMessage.value = null;
-            familyWishes.value = null;
+            console.error('Família não encontrada pelo ID:', slug);
+            familyName.value = 'Família não encontrada';
         }
       } catch (e) {
-        console.warn('Backend não disponível ou erro ao buscar família:', e);
-        familyName.value = name;
+        console.warn('Erro ao conectar com Backend:', e);
       }
     } catch (error) {
       console.error(error);
@@ -57,9 +79,7 @@ onMounted(async () => {
   }
 });
 
-// Quando o usuário abrir o presente:
 const handleGiftOpen = () => {
-  // Atrasar levemente o áudio para sincronizar com a animação de saída da caixa
   setTimeout(() => {
     if (playGlobalAudio) {
       playGlobalAudio();
@@ -78,6 +98,7 @@ const handleGiftOpen = () => {
       <ImageCarousel :custom-images="familyPhotos" />
       <MessageSection :text="familyMessage" />
       <WishesTreeSection background-image="/tree.png" :customOrnaments="familyWishes" />
+      <TimeCapsuleSection :photos="familyTimeline" />
       <GuestbookSection />
     </main>
 

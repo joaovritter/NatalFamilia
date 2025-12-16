@@ -1,6 +1,6 @@
 <script setup>
-import { ref, provide } from 'vue';
-import { RouterView } from 'vue-router';
+import { ref, provide, computed } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 
 /* --- Componentes Globais --- */
 import ChristmasLights from './components/ChristmasLights.vue';
@@ -11,6 +11,11 @@ import './assets/base.css';
 
 // Referência para controlar o AudioPlayer
 const audioPlayerRef = ref(null);
+const route = useRoute();
+
+const showGlobalEffects = computed(() => {
+  return !route.path.includes('/configurar');
+});
 
 const playAudio = () => {
   if (audioPlayerRef.value) {
@@ -18,16 +23,23 @@ const playAudio = () => {
   }
 };
 
+const setAudioSource = (src) => {
+  if (audioPlayerRef.value) {
+    audioPlayerRef.value.setSource(src);
+  }
+};
+
 // Provide para que os filhos possam controlar o áudio
 provide('playGlobalAudio', playAudio);
+provide('setAudioSource', setAudioSource);
 </script>
 
 <template>
   <div class="app-wrapper">
-    <ChristmasLights />
-    <GoldDustEffect />
+    <ChristmasLights v-if="showGlobalEffects" />
+    <GoldDustEffect v-if="showGlobalEffects" />
     
-    <AudioPlayer ref="audioPlayerRef" />
+    <AudioPlayer ref="audioPlayerRef" v-if="showGlobalEffects" />
 
     <RouterView />
   </div>

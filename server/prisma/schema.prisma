@@ -40,13 +40,28 @@ model Payment {
 
 model Family {
   id         Int      @id @default(autoincrement())
-  name       String   @unique
+  name       String  
+  slug       String   @unique 
   payment_id Int?
   payment    Payment? @relation(fields: [payment_id], references: [id])
   photos     String   // JSON string
+  youtubeLink String? @db.VarChar(255)
   message    String?  @db.VarChar(2000)
   wishes     String?  @db.Text // JSON string para os desejos da árvore
+  timeline   String?  @db.Text // JSON string para a timeline (foto + data + legenda)
+  capsule_messages CapsuleMessage[]
   created_at DateTime @default(now())
 
   @@map("families")
+}
+
+model CapsuleMessage {
+  id        Int      @id @default(autoincrement())
+  familyId  Int
+  sender    String
+  message   String
+  createdAt DateTime @default(now())
+  family    Family   @relation(fields: [familyId], references: [id])
+
+  @@map("capsule_messages")
 }

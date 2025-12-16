@@ -8,7 +8,6 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-// Inicializar cliente do Mercado Pago
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000'
 });
@@ -16,18 +15,10 @@ const client = new MercadoPagoConfig({
 const preference = new Preference(client);
 const payment = new Payment(client);
 
-/**
- * Criar preferência de pagamento no Mercado Pago
- * @param {Object} data - Dados do pagamento
- * @param {string} data.external_reference - ID do documento no MongoDB
- * @param {number} data.price - Valor do pagamento (hardcoded no backend)
- * @param {string} data.familyName - Nome da família
- * @returns {Promise<Object>} Resposta do Mercado Pago com preference_id
- */
 export const createPreference = async ({ external_reference, price, familyName }) => {
   try {
     const { getFrontendUrl, getWebhookUrl } = await import('../config/constants.js');
-    
+
     const body = {
       items: [
         {
@@ -38,7 +29,7 @@ export const createPreference = async ({ external_reference, price, familyName }
           currency_id: 'BRL'
         }
       ],
-      external_reference: external_reference, // ID do documento MongoDB
+      external_reference: external_reference,
       payment_methods: {
         excluded_payment_types: [],
         excluded_payment_methods: [],
@@ -55,7 +46,7 @@ export const createPreference = async ({ external_reference, price, familyName }
     };
 
     const response = await preference.create({ body });
-    
+
     return {
       preference_id: response.id,
       init_point: response.init_point,
@@ -67,11 +58,6 @@ export const createPreference = async ({ external_reference, price, familyName }
   }
 };
 
-/**
- * Consultar pagamento no Mercado Pago (para validação no webhook)
- * @param {string} paymentId - ID do pagamento no Mercado Pago
- * @returns {Promise<Object>} Dados do pagamento
- */
 export const getPayment = async (paymentId) => {
   try {
     const response = await payment.get({ id: paymentId });
@@ -82,11 +68,6 @@ export const getPayment = async (paymentId) => {
   }
 };
 
-/**
- * Consultar preferência no Mercado Pago
- * @param {string} preferenceId - ID da preferência
- * @returns {Promise<Object>} Dados da preferência
- */
 export const getPreference = async (preferenceId) => {
   try {
     const response = await preference.get({ id: preferenceId });
