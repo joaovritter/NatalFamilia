@@ -1,10 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://unplanted-loni-ambitionlessly.ngrok-free.dev/api',
+    baseURL: 'http://3.143.252.42:3000/api',
     headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true"
+        "Content-Type": "application/json"
     }
 });
 
