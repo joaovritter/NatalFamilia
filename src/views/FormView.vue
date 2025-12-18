@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
+let pollingInterval = null;
+
 
 const router = useRouter();
 const currentStep = ref(0);
@@ -112,7 +114,7 @@ const currentStepData = computed(() => steps[currentStep.value]);
 const progress = computed(() => ((currentStep.value + 1) / steps.length) * 100);
 
 /* --- Payment Logic --- */
-const mpPublicKey = import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-00000000-0000-0000-0000-000000000000';
+const mpPublicKey = import.meta.env.VITE_MP_PUBLIC_KEY || 'APP_USR-ebd17192-32c4-4db4-8c7b-5db8618d8013';
 let brickBuilder = null;
 const pixData = ref(null);
 const showPixModal = ref(false);
@@ -142,7 +144,7 @@ const initBrick = async () => {
       console.log("Configurando e criando novo brick...");
       const settings = {
           initialization: {
-            amount: 14.90,
+            amount: 1,
             payer: { 
                 email: 'cliente@natalfamilia.com',
                 entity_type: 'individual'
@@ -178,6 +180,7 @@ const initBrick = async () => {
                             paymentId: responseData.id 
                         };
                         showPixModal.value = true;
+                        startPolling();
                      } else {
                         alert("Pagamento pendente. Verifique seu email.");
                      }
@@ -255,11 +258,67 @@ const saveFamilyAndRedirect = async (paymentId) => {
     }
 };
 
+
+
 const checkPixStatus = async () => {
-    if (pixData.value) {
-        await saveFamilyAndRedirect(pixData.value.paymentId);
+    if (!pixData.value) return;
+
+
+    try {
+        loading.value = true;
+        console.log(`Verificando status do pagamento Pix... ID:${pixData.value.paymentId}`);
+
+
+        const response = await api.get(`/payment/${pixData.value.paymentId}`);
+        const pgto = response.data;
+
+        console.log(`Status do pagamento recebido: ${pgto}`);
+
+        if (pgto.status === 'approved' || pgto.status === 'APPROVED') {
+            console.log("Pagamento aprovado! Salvando família e redirecionando...");
+            clearInterval(pollingInterval);
+            await saveFamilyAndRedirect(pixData.value.paymentId);
+        } else {
+            console.warn(`Pagamento ainda não aprovado. Status: ${pgto.status}`);
+            alert("Pagamento ainda não aprovado. Por favor, aguarde alguns instantes.");
+        }
+    } catch (e) {
+        console.error("Erro ao verificar status do pagamento Pix:", e);
+        alert("Erro ao verificar status do pagamento.");
+    } finally {
+        loading.value = false;
     }
 };
+
+
+const startPolling = () => {
+    if (pollingInterval) clearInterval(pollingInterval);
+
+    pollingInterval = setInterval(async () => {
+        if (!pixData.value) return;
+        console.log("Polling: Verificando status do pagamento Pix...");
+        try {
+            const response = await api.get(`/payment/${pixData.value.paymentId}`);
+            const status = response.data.status;
+
+            if (status === 'approved' || status === 'APPROVED') {
+                console.log("Pagamento aprovado via polling! Salvando família e redirecionando...");
+                clearInterval(pollingInterval);
+                await saveFamilyAndRedirect(pixData.value.paymentId);
+
+            }
+
+        } catch (e) {
+            console.error("Erro ao verificar status do pagamento via polling:", e);
+        }
+    }, 3000); 
+
+};
+
+
+onMounted(() => {
+    if (pollingInterval) clearInterval(pollingInterval);
+});
 
 /* --- Navigation & Inputs --- */
 const handleNext = () => {

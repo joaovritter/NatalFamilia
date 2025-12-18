@@ -4,7 +4,7 @@ const processPayment = async (paymentData) => {
     // Inicializar o cliente AQUI para garantir que as variáveis de ambiente já foram carregadas
     // O import do index.js carrega o dotenv, mas por ser ESM, este arquivo pode ser avaliado antes.
     const client = new MercadoPagoConfig({
-        accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-00000000-0000-0000-0000-000000000000'
+        accessToken: process.env.MP_ACCESS_TOKEN || 'APP_USR-ebd17192-32c4-4db4-8c7b-5db8618d8013'
     });
     const payment = new Payment(client);
 

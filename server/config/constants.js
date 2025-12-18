@@ -1,6 +1,6 @@
 // CONSTANTE DE PREÇO - NUNCA CONFIE NO VALOR DO FRONTEND
 // Este valor deve ser definido aqui no backend e nunca aceito do cliente
-export const SITE_PRICE = 29.90; // R$ 29,90
+export const SITE_PRICE = 1; // R$ 29,90
 
 // URL de retorno após pagamento (frontend)
 export const getFrontendUrl = () => {

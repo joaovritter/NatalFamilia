@@ -35,7 +35,7 @@ router.post('/payment', async (req, res) => {
 
 
     paymentData.description = 'Natal da Família';
-    paymentData.transaction_amount = 29.90;
+    paymentData.transaction_amount = 14.90;
 
     const mpResponse = await processPayment(paymentData);
 
