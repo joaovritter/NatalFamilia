@@ -5,6 +5,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173', "https://natal-familia-main.vercel.app",
   'http://localhost:5173', // Vite dev server padrão
   'http://localhost:3000', // Caso frontend rode na mesma porta
+  'http://3.143.252.42:5173',
 ];
 
 // Adicionar domínio de produção se existir
