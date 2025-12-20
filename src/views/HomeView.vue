@@ -32,7 +32,7 @@ onMounted(async () => {
       
       try {
 
-        const response = await fetch(`http://localhost:3000/api/family/${slug}`);
+        const response = await fetch(`http://api.alcefamily.shop/api/family/${slug}`);
         
         if (response.ok) {
           const data = await response.json();
@@ -45,20 +45,20 @@ onMounted(async () => {
           familyWishes.value = Array.isArray(data.wishes) 
             ? data.wishes.map(w => ({
               ...w,
-              image: w.image ? `http://localhost:3000${w.image}` : null
+              image: w.image ? `http://api.alcefamily.shop${w.image}` : null
             })) 
             : [];
 
           // General Carousel Photos (Simple Paths)
           familyPhotos.value = Array.isArray(data.photos)
-             ? data.photos.map(photo => `http://localhost:3000${photo}`)
+             ? data.photos.map(photo => `http://api.alcefamily.shop${photo}`)
              : [];
              
           // Timeline Photos (Objects)
           familyTimeline.value = Array.isArray(data.timeline)
             ? data.timeline.map(item => ({
                 ...item,
-                src: `http://localhost:3000${item.src}`
+                src: `http://api.alcefamily.shop${item.src}`
             }))
             : [];
              

@@ -17,10 +17,6 @@ const showGlobalEffects = computed(() => {
   return !route.path.includes('/configurar');
 });
 
-const showAudioPlayer = computed(() => {
-  return ['model-home', 'personalized'].includes(route.name);
-});
-
 const playAudio = () => {
   if (audioPlayerRef.value) {
     audioPlayerRef.value.playAudio();
@@ -43,7 +39,7 @@ provide('setAudioSource', setAudioSource);
     <ChristmasLights v-if="showGlobalEffects" />
     <GoldDustEffect v-if="showGlobalEffects" />
     
-    <AudioPlayer ref="audioPlayerRef" v-if="showAudioPlayer" />
+    <AudioPlayer ref="audioPlayerRef" v-if="showGlobalEffects" />
 
     <RouterView />
   </div>

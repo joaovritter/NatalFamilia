@@ -103,7 +103,7 @@ const steps = [
     },
     {
         id: 'payment',
-        message: 'O presente da sua família está quase pronto! Realize o pagamento de R$ 14,90 para liberar o seu site de Natal.',
+        message: 'Tudo pronto! Agora escolha a forma de pagamento para gerar o site!',
         inputType: 'payment',
         field: null,
         buttonText: null // Button handled by payment brick

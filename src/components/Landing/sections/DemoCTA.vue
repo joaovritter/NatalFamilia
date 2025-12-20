@@ -18,7 +18,7 @@
               Interativo e emocionante
             </p>
           </div>
-          <a href="http://localhost:5173/familia/Silva-Io0IvX" target="_blank" class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-accent-foreground text-accent font-semibold rounded-xl hover:bg-accent-foreground/90 transition-all w-fit">
+          <a href="http://alcefamily.shop/familia/Silva-Io0IvX" target="_blank" class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-accent-foreground text-accent font-semibold rounded-xl hover:bg-accent-foreground/90 transition-all w-fit">
             Ver Exemplo
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />

@@ -16,10 +16,10 @@ const props = defineProps({
 const modules = [Autoplay, Pagination, EffectCoverflow];
 
 const defaultImages = [
-  { src: 'https://images.unsplash.com/photo-1544967082-d9d25d867d66?q=80&w=800&auto=format&fit=crop', alt: 'Família no Natal' },
-  { src: 'https://images.unsplash.com/photo-1512353087810-25dfcd100962?q=80&w=800&auto=format&fit=crop', alt: 'Ceia de Natal' },
-  { src: 'https://images.unsplash.com/photo-1576919228636-1e6260171a9e?q=80&w=800&auto=format&fit=crop', alt: 'Decoração Natalina' },
-  { src: 'https://images.unsplash.com/photo-1513297887119-d46091b24bfa?q=80&w=800&auto=format&fit=crop', alt: 'Presentes de Natal' },
+  { src: 'https://cdn.discordapp.com/attachments/1417313311556370655/1450300905541996634/Lolly_avos-bebe-1024x683.png?ex=6945fdf9&is=6944ac79&hm=6f5e8b827a36c48ca932a2de8449607d3af98ccd8ff10d3a30b969bed07a4f29&', alt: 'Família no Natal' },
+  { src: 'https://cdn.discordapp.com/attachments/1417313311556370655/1450300776164491407/estudante-hispanico-e-familia-celebrando-a-formatura_1218270-4391.png?ex=6945fdda&is=6944ac5a&hm=31f4f0dbda294c374cb79f4b9084b7e0797979bf389c5b749d309f0702185e71&', alt: 'Ceia de Natal' },
+  { src: 'https://cdn.discordapp.com/attachments/1417313311556370655/1450300537290625194/churrasco-em-casa-4-1024x683.png?ex=6945fda1&is=6944ac21&hm=3bfa44dbc887949c2f44f2ab8dacba9cdb07dc8888612953db4d4c92af6faf72&', alt: 'Decoração Natalina' },
+  { src: 'https://cdn.discordapp.com/attachments/1417313311556370655/1450300413642539179/brincadeiras-criancas-idades-diferentes6.png?ex=6945fd83&is=6944ac03&hm=e484419fa3913ca918bf02efef8a2b2bda373f8e872afd7cab2909963beb0a21&', alt: 'Presentes de Natal' },
 ];
 
 const images = computed(() => {
